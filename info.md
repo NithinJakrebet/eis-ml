@@ -50,3 +50,29 @@ Place it inside the `notebooks/` directory.
 - **For best results → Use both!** 😊
 
 Would you like help setting up both approaches in your project?
+
+
+
+different parameters ?
+ Temperature
+ Frequency
+
+
+
+
+different input methods ?
+   Magnitude/phase angle of the real and imaginary resistance
+   Array of arrays ( in re 1 re 2 re 60
+Zim(ω1), Zim(ω2), ... Zim(ω60)]T are the real (Zre) and imaginary (Zim) parts of impedance spectra collected at 60 different frequencies (ωn, n = 1, 2, ..., 60))
+
+
+ State vectors: We frame the problem as a regression task, and train a probabilistic machine learning model to learn the mapping Qn = f(sn, an), with uncertainty estimates, where sn is the battery state at the start of the nth cycle, an is the future action (the nth cycle charge/ discharge protocol), and Qn is the discharge capacity measured at the end of the cycle. The battery state vector sn is formed from the con- catenation of the real (Z re ) and imaginary (Z im ) components of the impedance measured at 57 frequencies, ω1, . . . , ω57, in the range 0.02Hz-20kHz; sn =1⁄2Zreðω1Þ,Zimðω1Þ,:::,Zreðω57Þ,Zimðω57Þ.
+
+
+
+
+different algorithms:
+ GPR
+   (different)
+ Gradient boosted decision trees (XGBoost)
+

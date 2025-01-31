@@ -21,6 +21,6 @@ if __name__ == "__main__":
     data = load_data()
     
     # Print sample output to verify
-    for filename, df in data.items():
+    for filename, df in data.items(): 
         print(f"\n{filename} - {df.shape}")
         print(df.head())
