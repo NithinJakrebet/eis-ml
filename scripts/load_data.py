@@ -1,26 +1,31 @@
 import os
 import pandas as pd
 
-# Define the dataset directory
-DATA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../data/03-06-24 - Selva, A8 channels"))
+def load_data(subfolder: str, filename: str, data_dir: str = "../data") -> pd.DataFrame:    
+    file_path = os.path.join(data_dir, subfolder, filename)
 
-def load_data():
-    """Loads all CSV files from the specified data directory into a dictionary of DataFrames."""
-    
-    data_files = [f for f in os.listdir(DATA_DIR) if f.endswith('.csv')]
-    data_dict = {}
+    if not os.path.exists(file_path): raise FileNotFoundError(f"File '{file_path}' not found.")
 
-    for file in data_files:
-        file_path = os.path.join(DATA_DIR, file)
-        df = pd.read_csv(file_path)
-        data_dict[file] = df  # Store each dataset in a dictionary
+    try:
+        return pd.read_csv(file_path)
+    except Exception as e: raise ValueError(f"Error loading '{file_path}': {e}")
+
+'''
+Loads a CSV file from a given subfolder in the data directory.
+
+Parameters:
+    subfolder (str): The name of the subfolder (e.g., "03-06-24").
+    filename (str): The name of the CSV file to load (e.g., "A1.csv").
+    data_dir (str, optional): The base directory containing data subfolders. Defaults to "data".
+
+Returns:
+    pd.DataFrame: The loaded DataFrame.
     
-    return data_dict
+Example:
 
 if __name__ == "__main__":
-    data = load_data()
-    
-    # Print sample output to verify
-    for filename, df in data.items(): 
-        print(f"\n{filename} - {df.shape}")
-        print(df.head())
+    # Testing the function
+    df = load_data("03-06-24", "A1.csv")
+    print(df.head())
+
+'''
