@@ -1,11 +1,11 @@
-Below is an updated example `README.md` that reflects your repository structure with separate directories for **data**, **results**, **models**, **scripts**, and **notebooks**. You can adjust the content as needed to better fit your specific project details.
-
----
-
 ```markdown
 # Battery ML Creation Model from EIS Data
 
 This repository contains a machine learning framework for analyzing battery performance using Electrochemical Impedance Spectroscopy (EIS) data. It includes data processing scripts, model training and evaluation code, and Jupyter notebooks for exploratory analysis.
+
+### exiting weird terminal venv
+exec zsh    
+source venv/bin/activate            
 
 ## Getting Started
 
