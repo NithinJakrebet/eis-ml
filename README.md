@@ -14,12 +14,11 @@ source venv/bin/activate
 2. **Open the Integrated Terminal** by pressing <kbd>Ctrl</kbd>+<kbd>`</kbd> (or via the menu: *View > Terminal*).
 3. **Clone the repository** by running:
    ```bash
-   git clone https://github.com/your-username/your-repo.git
+   git clone https://github.com/NithinJakrebet/eis-ml.git
    ```
-   Replace `https://github.com/your-username/your-repo.git` with your repository's URL.
 4. **Navigate into the project directory:**
    ```bash
-   cd your-repo
+   cd eis-ml
    ```
 
 ### Setting Up a Virtual Environment and Installing Dependencies
@@ -68,9 +67,7 @@ Below is an overview of the repository structure and a brief explanation of each
 ```
 your-repo/
 │
-├── data/                
-│   ├── raw/             # Contains raw, unprocessed EIS data files.
-│   └── processed/       # Contains cleaned and preprocessed data.
+├── data/                # Contains EIS data files.
 │
 ├── models/              # Directory for saving and loading trained model files.
 │
@@ -83,21 +80,3 @@ your-repo/
 ├── requirements.txt     # List of Python dependencies.
 └── README.md            # This file.
 ```
-
-### Workflow Overview
-
-1. **Data Preparation:**
-   - **Place raw data** in the `data/raw/` directory.
-   - Run the data preprocessing script from the `scripts/` folder (e.g., `scripts/data_preprocessing.py`) to clean the data and save it into `data/processed/`.
-
-2. **Exploratory Analysis:**
-   - Use the notebooks in the `notebooks/` directory (for example, `exploratory_analysis.ipynb`) to explore and visualize the data.
-
-3. **Model Training:**
-   - Train your model by running the appropriate notebook (e.g., `model_training.ipynb`) or executing the training script in `scripts/train.py`.
-   - The trained models will be saved in the `models/` directory.
-
-4. **Model Evaluation:**
-   - Evaluate your trained model using either the evaluation notebook (e.g., `evaluation.ipynb`) or by running the evaluation script in `scripts/evaluate.py`.
-   - Performance metrics, plots, and logs will be stored in the `results/` directory.
-
