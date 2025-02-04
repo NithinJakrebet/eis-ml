@@ -1,4 +1,3 @@
-```markdown
 # Battery ML Creation Model from EIS Data
 
 This repository contains a machine learning framework for analyzing battery performance using Electrochemical Impedance Spectroscopy (EIS) data. It includes data processing scripts, model training and evaluation code, and Jupyter notebooks for exploratory analysis.
@@ -102,4 +101,3 @@ your-repo/
    - Evaluate your trained model using either the evaluation notebook (e.g., `evaluation.ipynb`) or by running the evaluation script in `scripts/evaluate.py`.
    - Performance metrics, plots, and logs will be stored in the `results/` directory.
 
-```
