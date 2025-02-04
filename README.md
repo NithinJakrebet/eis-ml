@@ -17,9 +17,11 @@ source venv/bin/activate
    git clone https://github.com/NithinJakrebet/eis-ml.git
    ```
 4. **Navigate into the project directory:**
+You can do this:
    ```bash
    cd eis-ml
    ```
+or you can just open the newly created eis-ml folder from vscode, I would receommend this option.
 
 ### Setting Up a Virtual Environment and Installing Dependencies
 
@@ -31,8 +33,10 @@ It is recommended to use a virtual environment to manage the Python dependencies
    ```
 2. **Activate the virtual environment:**
    - **On Windows:**
-     ```bash
-     venv\Scripts\activate
+     ```powershell
+     Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
+     .\venv\Scripts\Activate
      ```
    - **On macOS and Linux:**
      ```bash
@@ -51,21 +55,33 @@ It is recommended to use a virtual environment to manage the Python dependencies
 
 - **Jupyter Notebooks:**  
   Open the notebook files in the `notebooks/` directory directly in VSCode or launch Jupyter Notebook from the terminal:
+  Try to run the cell. Then select Python environment and then select the (venv)Python kernel.
+  If that does not show up run the following.
+  
   ```bash
-  jupyter notebook
+  jupyter kernelspec list
   ```
-- **Python Scripts:**  
-  Ensure your virtual environment is activated, then run any script from the `scripts/` directory:
-  ```bash
-  python scripts/your_script.py
-  ```
+
+   You should see the kernel:
+  
+    ```bash
+   python3          <path>/eis-ml/venv/share/jupyter/kernels/python3
+   ```
+    Run the following
+    ```bash
+     pip uninstall jupyter jupyterlab notebook ipykernel
+       pip install jupyter
+    ```
+   ```bash
+   python -m ipykernel install --user --name=venv --display-name "Python (venv)"
+    ```   
 
 ## Directory Structure
 
 Below is an overview of the repository structure and a brief explanation of each folder:
 
 ```
-your-repo/
+eis-ml/
 │
 ├── data/                # Contains EIS data files.
 │
@@ -76,7 +92,45 @@ your-repo/
 ├── results/             # Holds the outputs such as evaluation logs, plots, and performance metrics.
 │
 ├── scripts/             # Python scripts for data preprocessing, model training, and evaluation.
+│                        # Write reusable functions here.
 │
 ├── requirements.txt     # List of Python dependencies.
-└── README.md            # This file.
+└── README.md            # Project documentation.
 ```
+
+## Workflow Overview
+
+### **1. Data Preparation**
+- Preprocess the dataset and analyze feature correlations to select the most relevant ones for training.
+- Use Jupyter notebooks in the `notebooks/` directory (e.g., `exploratory_analysis.ipynb`) to visualize and explore data trends.
+
+### **2. Model Training**
+- Train the model using either the appropriate notebook or script.
+- Trained models will be stored in the `models/` directory as `.pkl` files using `joblib`.
+
+### **3. Model Evaluation**
+- Evaluate trained models using the evaluation script (`scripts/evaluate.py`).
+- Performance metrics, visualizations, and logs will be saved in the `results/` directory.
+
+
+## Branching Strategy
+
+To maintain a clean and organized repository, follow this naming convention for feature branches:
+
+- **Single developer working on a feature:**  
+  ```
+  <feature>
+  ```
+  Example: `preprocessing`
+
+- **Multiple developers working on the same feature:**  
+  ```
+  <Name>-<feature>
+  ```
+  Example:  
+  ```
+  Nathan-preprocessing
+  Dibo-preprocessing
+  ```
+
+This structure ensures clarity in collaboration and version control.  
