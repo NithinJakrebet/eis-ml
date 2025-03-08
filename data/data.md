@@ -25,3 +25,7 @@
   - High C-Rate, Room Temperature (25 °C)
   - **Failures**:
     - All channels except A3 and A6 have achieved failure
+
+
+## 05/03/24
+- -10°C 0.375C charge and discharge
