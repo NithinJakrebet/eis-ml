@@ -107,16 +107,16 @@ def model_predictions(y_true, y_pred_mean, y_pred_std=None, title_prefix="Model"
     plt.grid(True)
     
     # Histogram of residuals
-    plt.subplot(1, 3, 3)
-    plt.hist(residuals, bins=20, alpha=0.7, edgecolor='black')
-    plt.axvline(0, color='r', linestyle='--', lw=2)
-    plt.xlabel('Residuals (True - Predicted)')
-    plt.ylabel('Frequency')
-    plt.title(f'{title_prefix}: Residual Distribution')
-    plt.grid(True)
+    # plt.subplot(1, 3, 3)
+    # plt.hist(residuals, bins=20, alpha=0.7, edgecolor='black')
+    # plt.axvline(0, color='r', linestyle='--', lw=2)
+    # plt.xlabel('Residuals (True - Predicted)')
+    # plt.ylabel('Frequency')
+    # plt.title(f'{title_prefix}: Residual Distribution')
+    # plt.grid(True)
     
-    plt.tight_layout()
-    plt.show()
+    # plt.tight_layout()
+    # plt.show()
     
     # Print summary statistics
     print(f"\n{title_prefix} Prediction Analysis:")

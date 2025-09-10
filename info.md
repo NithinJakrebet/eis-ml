@@ -226,3 +226,7 @@ Once you do that, you’ll have:
 \]
 
 That’s the typical “state, action, outcome” format you need for your modeling.
+
+
+09/08/25
+Weighting?

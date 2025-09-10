@@ -19,10 +19,8 @@ def train_ensemble_model(X_train, y_train, n_models=None, model_params=None):
     Returns:
         list: List of trained XGBoost models
     """
-    if n_models is None:
-        n_models = config.NUM_ENSEMBLE
-    if model_params is None:
-        model_params = config.MODEL_PARAMS.copy()
+    if n_models is None: n_models = config.NUM_ENSEMBLE
+    if model_params is None: model_params = config.MODEL_PARAMS.copy()
     
     ensemble_models = []
     
@@ -41,11 +39,7 @@ def train_ensemble_model(X_train, y_train, n_models=None, model_params=None):
         # Train model
         model.fit(X_train, y_train)
         ensemble_models.append(model)
-        
-        if (i + 1) % 2 == 0 or i == 0:
-            print(f"  Trained model {i + 1}/{n_models}")
     
-    print("Ensemble training complete!")
     return ensemble_models
 
 def predict_ensemble(models, X_test):

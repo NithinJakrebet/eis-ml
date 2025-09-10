@@ -33,3 +33,11 @@ DEFAULT_DATA_FOLDER = "03-06-24"
 # Results configuration
 RESULTS_DIR = "../results"
 MODELS_DIR = "../models"
+
+def print_config():
+    print("=== EIS-ML Configuration ===")
+    print(f"Data folder: {DEFAULT_DATA_FOLDER}")
+    print(f"Training channels: {TRAIN_CHANNELS}")
+    print(f"Testing channels: {TEST_CHANNELS}")
+    print(f"Features: {N_FEATURES}")
+    print(f"Ensemble size: {NUM_ENSEMBLE}")
