@@ -12,7 +12,13 @@ def load_data(subfolder: str, filename: str, data_dir: str = "../data") -> pd.Da
 
     return df
 
-def load_and_prepare_data(data_folder=None, cycle_range=None, train_channels=None, test_channels=None):
+def load_and_prepare_data(
+    data_folder=None, 
+    cycle_range=None, 
+    train_channels=None, 
+    test_channels=None, 
+    frequency_selection=None
+):
     """
     Load and prepare training and testing data with flexible configuration.
     
@@ -21,6 +27,7 @@ def load_and_prepare_data(data_folder=None, cycle_range=None, train_channels=Non
         cycle_range (tuple): Optional (start_cycle, end_cycle) to filter data. If None, uses all cycles
         train_channels (list): List of channels to use for training. If None, uses config.TRAIN_CHANNELS
         test_channels (list): List of channels to use for testing. If None, uses config.TEST_CHANNELS
+        frequency_selection (str): Optional frequency selection method ('physics', 'correlation', 'combined', or None)
         
     Returns:
         tuple: (X_train, X_test, y_train, y_test)
@@ -47,10 +54,14 @@ def load_and_prepare_data(data_folder=None, cycle_range=None, train_channels=Non
         raise ValueError(f"No testing data found for channels {test_channels}{cycle_info}")
     
     # Prepare features and targets
-    X_train, X_test, y_train, y_test = prepare_features_and_targets(train_channels_data, test_channels_data)
+    X_train, X_test, y_train, y_test = prepare_features_and_targets(train_channels_data, test_channels_data, frequency_selection)
     
-    print(f"X_train: {X_train.shape}, y_train: {y_train.shape}")
-    print(f"X_test: {X_test.shape}, y_test: {y_test.shape}")
+    # Print info about features
+    feature_info = ""
+    if frequency_selection:
+        feature_info = f" (using {frequency_selection} frequency selection)"
+    print(f"X_train: {X_train.shape}, y_train: {y_train.shape}{feature_info}")
+    print(f"X_test: {X_test.shape}, y_test: {y_test.shape}{feature_info}")
     print(f"Capacity ranges - Train: {y_train.min():.1f}-{y_train.max():.1f}, Test: {y_test.min():.1f}-{y_test.max():.1f}")
     
     return X_train, X_test, y_train, y_test
@@ -68,7 +79,7 @@ def load_channels_data(data_folder, channels, cycle_range=None):
     
     return data_by_channel
 
-def prepare_features_and_targets(train_channels_data, test_channels_data):
+def prepare_features_and_targets(train_channels_data, test_channels_data, frequency_selection=None):
     """
     Convert channel data to feature matrices and target vectors.
     """
@@ -80,15 +91,9 @@ def prepare_features_and_targets(train_channels_data, test_channels_data):
     df_train = pd.concat(train_dfs, ignore_index=True)
     df_test = pd.concat(test_dfs, ignore_index=True)
     
-    # Build feature matrices
-    X_train, cycles_train = build_model_input(df_train)
-    X_test, cycles_test = build_model_input(df_test)
-    
-    last_capacity_train = df_train.groupby('cycle number')['Capacity/mA.h'].last()
-    y_train = last_capacity_train.loc[cycles_train].values
-    
-    last_capacity_test = df_test.groupby('cycle number')['Capacity/mA.h'].last()
-    y_test = last_capacity_test.loc[cycles_test].values
+    # Build feature matrices with optional frequency selection
+    X_train, y_train = build_model_input(df_train, frequency_selection=frequency_selection)
+    X_test, y_test = build_model_input(df_test, frequency_selection=frequency_selection)
     
     return X_train, X_test, y_train, y_test
 

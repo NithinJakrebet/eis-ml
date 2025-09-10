@@ -75,16 +75,7 @@ def nyquist(df: pd.DataFrame):
 
 
 def model_predictions(y_true, y_pred_mean, y_pred_std=None, title_prefix="Model"):
-    """
-    Plot model predictions vs true values with residual analysis.
-    
-    Args:
-        y_true (np.ndarray): True target values
-        y_pred_mean (np.ndarray): Mean predictions
-        y_pred_std (np.ndarray, optional): Standard deviation of predictions (for uncertainty)
-        title_prefix (str): Prefix for plot titles
-    """
-    plt.figure(figsize=(15, 5))
+    fig = plt.figure(figsize=(15, 5))
     
     # Scatter plot: Predicted vs. True
     plt.subplot(1, 3, 1)
@@ -106,18 +97,6 @@ def model_predictions(y_true, y_pred_mean, y_pred_std=None, title_prefix="Model"
     plt.title(f'{title_prefix}: Residual Plot')
     plt.grid(True)
     
-    # Histogram of residuals
-    # plt.subplot(1, 3, 3)
-    # plt.hist(residuals, bins=20, alpha=0.7, edgecolor='black')
-    # plt.axvline(0, color='r', linestyle='--', lw=2)
-    # plt.xlabel('Residuals (True - Predicted)')
-    # plt.ylabel('Frequency')
-    # plt.title(f'{title_prefix}: Residual Distribution')
-    # plt.grid(True)
-    
-    # plt.tight_layout()
-    # plt.show()
-    
     # Print summary statistics
     print(f"\n{title_prefix} Prediction Analysis:")
     print(f"  Mean Absolute Error: {np.mean(np.abs(residuals)):.4f}")
@@ -125,6 +104,9 @@ def model_predictions(y_true, y_pred_mean, y_pred_std=None, title_prefix="Model"
     print(f"  Residual Std: {np.std(residuals):.4f}")
     if y_pred_std is not None:
         print(f"  Mean Prediction Uncertainty: {np.mean(y_pred_std):.4f}")
+    
+    plt.tight_layout()
+    return fig
 
 
 def ensemble_uncertainty(y_true, y_pred_mean, y_pred_std, title="Ensemble Predictions with Uncertainty"):
@@ -170,4 +152,103 @@ def ensemble_uncertainty(y_true, y_pred_mean, y_pred_std, title="Ensemble Predic
     
     plt.tight_layout()
     plt.show()
+
+
+def residual_analysis_plots(residuals, cycle_numbers, y_pred_mean):
+    """
+    Create residual analysis plots.
+    
+    Args:
+        residuals: Residual values
+        cycle_numbers: Cycle numbers for temporal analysis
+        y_pred_mean: Predicted values
+    
+    Returns:
+        matplotlib figure object
+    """
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+
+    # Plot 1: Residuals vs Cycle Number
+    axes[0].scatter(cycle_numbers, residuals, alpha=0.6, s=20)
+    axes[0].set_xlabel('Cycle Number')
+    axes[0].set_ylabel('Residuals')
+    axes[0].set_title('Residuals vs Cycle Number')
+    axes[0].grid(True, alpha=0.3)
+
+    # Plot 2: Residuals vs Predicted Values
+    axes[1].scatter(y_pred_mean, residuals, alpha=0.6, s=20)
+    axes[1].set_xlabel('Predicted Capacity (mA.h)')
+    axes[1].set_ylabel('Residuals')
+    axes[1].set_title('Residuals vs Predictions')
+    axes[1].axhline(y=0, color='r', linestyle='--', alpha=0.7)
+    axes[1].grid(True, alpha=0.3)
+
+    # Plot 3: Sequential residuals to see patterns
+    axes[2].plot(range(len(residuals)), residuals, 'b-', linewidth=1)
+    axes[2].set_xlabel('Sample Index')
+    axes[2].set_ylabel('Residuals')
+    axes[2].set_title('Sequential Residual Pattern')
+    axes[2].grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    return fig
+
+
+def fft_analysis_plots(residuals, cycle_numbers):
+    """
+    Create FFT analysis plots for detecting sinusoidal patterns.
+    
+    Args:
+        residuals: Residual values
+        cycle_numbers: Cycle numbers for temporal analysis
+    
+    Returns:
+        tuple: (matplotlib figure object, fft analysis data dict)
+    """
+    from scipy.fft import fft, fftfreq
+    
+    # Sort by cycle numbers
+    sorted_order = np.argsort(cycle_numbers)
+    sorted_cycles = cycle_numbers[sorted_order]
+    sorted_residuals = residuals[sorted_order]
+
+    # FFT analysis
+    fft_result = fft(sorted_residuals)
+    frequencies = fftfreq(len(sorted_residuals), d=1)  # 1 cycle spacing
+    magnitude = np.abs(fft_result)
+
+    # Find dominant frequency (skip DC component)
+    pos_freqs = frequencies[1:len(frequencies)//2]
+    pos_magnitudes = magnitude[1:len(magnitude)//2]
+    dominant_idx = np.argmax(pos_magnitudes)
+    dominant_freq = pos_freqs[dominant_idx]
+    dominant_period = 1 / dominant_freq if dominant_freq > 0 else float('inf')
+
+    # Create plots
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+
+    axes[0].plot(sorted_cycles, sorted_residuals, 'b-', linewidth=1)
+    axes[0].set_xlabel('Cycle Number')
+    axes[0].set_ylabel('Residuals')
+    axes[0].set_title('Residuals vs Cycle (Check for Waves)')
+    axes[0].grid(True, alpha=0.3)
+
+    axes[1].plot(pos_freqs[:50], pos_magnitudes[:50])  # Show first 50 frequencies
+    axes[1].set_xlabel('Frequency (cycles⁻¹)')
+    axes[1].set_ylabel('Magnitude')
+    axes[1].set_title('Frequency Spectrum')
+    axes[1].grid(True, alpha=0.3)
+    axes[1].axvline(x=dominant_freq, color='r', linestyle='--', alpha=0.7, label=f'Peak at {dominant_freq:.3f}')
+    axes[1].legend()
+
+    plt.tight_layout()
+    
+    # Return both figure and analysis data
+    fft_data = {
+        'dominant_frequency': float(dominant_freq) if not np.isnan(dominant_freq) else 0.0,
+        'dominant_period': float(dominant_period) if not np.isinf(dominant_period) and not np.isnan(dominant_period) else 0.0,
+        'has_periodic_pattern': bool(5 < dominant_period < 50) if not np.isinf(dominant_period) and not np.isnan(dominant_period) else False,
+    }
+    
+    return fig, fft_data
 
