@@ -54,7 +54,11 @@ def load_and_prepare_data(
         raise ValueError(f"No testing data found for channels {test_channels}{cycle_info}")
     
     # Prepare features and targets
-    X_train, X_test, y_train, y_test = prepare_features_and_targets(train_channels_data, test_channels_data, frequency_selection)
+    X_train, X_test, y_train, y_test = prepare_features_and_targets(
+        train_channels_data, 
+        test_channels_data, 
+        frequency_selection
+    )
     
     # Print info about features
     feature_info = ""

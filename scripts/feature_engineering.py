@@ -75,20 +75,13 @@ def build_action_vector(df: pd.DataFrame):
   return cycle_numbers, action_matrix
 
 
-def build_model_input(df, cycle_range=None, action_vector=True, selected_frequencies=None, frequency_selection=None):
-  """
-  Build the input and target variables for model training.
-  
-  Args:
-    df: DataFrame with EIS data (instead of csv_path)
-    cycle_range: Optional tuple (min_cycle, max_cycle) to filter data
-    action_vector: Whether to include action vector features
-    selected_frequencies: Optional list of frequencies to use (if None, uses all)
-    frequency_selection: Optional frequency selection method ('physics', 'correlation', 'combined')
-  
-  Returns:
-    tuple: (X, y) where X is features and y is capacity targets
-  """
+def build_model_input(
+  df, 
+  cycle_range=None, 
+  action_vector=True, 
+  selected_frequencies=None, 
+  frequency_selection=None
+):
   # Apply cycle range filter if specified
   if cycle_range:
     min_cycle, max_cycle = cycle_range
@@ -212,33 +205,33 @@ def correlation_frequency_selection(df, frequencies,n_frequencies=5):
     
 def combined_frequency_selection(df, frequencies,n_frequencies=5):
   # Physics-informed selection with correlation weighting
-    physics_weight = 2.0
-    correlations = []
-    capacities = df.groupby('cycle number')['Capacity/mA.h'].first()
-    
-    for freq in frequencies:
-      freq_data = []
-      for cycle in sorted(capacities.index):
-        cycle_freq_data = df[(df['cycle number'] == cycle) & (df['freq/Hz'] == freq)]
-        if not cycle_freq_data.empty:
-          real_z = cycle_freq_data['Re(Z)/Ohm'].iloc[0]
-          imag_z = cycle_freq_data['Im(Z)/Ohm'].iloc[0]
-          magnitude = np.sqrt(real_z**2 + imag_z**2)
-          freq_data.append(magnitude)
-        else:
-          freq_data.append(np.nan)
-      
-      if len(freq_data) > 0:
-        corr = np.corrcoef(freq_data, capacities.values)[0,1]
-        base_score = abs(corr) if not np.isnan(corr) else 0
-        # Boost score for physics-relevant frequencies
-        if 1.0 <= freq <= 10.0:
-          base_score *= physics_weight
-        correlations.append(base_score)
+  physics_weight = 2.0
+  correlations = []
+  capacities = df.groupby('cycle number')['Capacity/mA.h'].first()
+  
+  for freq in frequencies:
+    freq_data = []
+    for cycle in sorted(capacities.index):
+      cycle_freq_data = df[(df['cycle number'] == cycle) & (df['freq/Hz'] == freq)]
+      if not cycle_freq_data.empty:
+        real_z = cycle_freq_data['Re(Z)/Ohm'].iloc[0]
+        imag_z = cycle_freq_data['Im(Z)/Ohm'].iloc[0]
+        magnitude = np.sqrt(real_z**2 + imag_z**2)
+        freq_data.append(magnitude)
       else:
-        correlations.append(0)
+        freq_data.append(np.nan)
     
-    top_indices = np.argsort(correlations)[-n_frequencies:]
-    selected_freqs = frequencies[top_indices]
-    return selected_freqs
+    if len(freq_data) > 0:
+      corr = np.corrcoef(freq_data, capacities.values)[0,1]
+      base_score = abs(corr) if not np.isnan(corr) else 0
+      # Boost score for physics-relevant frequencies
+      if 1.0 <= freq <= 10.0:
+        base_score *= physics_weight
+      correlations.append(base_score)
+    else:
+      correlations.append(0)
+  
+  top_indices = np.argsort(correlations)[-n_frequencies:]
+  selected_freqs = frequencies[top_indices]
+  return selected_freqs
     
