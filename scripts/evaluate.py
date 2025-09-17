@@ -15,18 +15,6 @@ def evaluate_model(y_true, y_pred):
     return [rmse, r2, mse, mae]
 
 def save_results(filename, X_train, X_test, metrics, model_info, fig=None, save_plot=True, save_data=True):
-    """
-    Save model results including plots and metrics.
-    
-    Args:
-        filename: Base filename for saved files
-        X_train, X_test: Training and test feature matrices 
-        metrics: Dictionary with rmse, r2, mse, mae
-        model_info: Dictionary with model description info
-        fig: matplotlib figure object to save (optional)
-        save_plot: Whether to save the figure
-        save_data: Whether to save metrics as JSON
-    """
     # Create results directory and subdirectory for this experiment
     results_dir = os.path.join(os.path.dirname(__file__), '..', 'results')
     experiment_dir = os.path.join(results_dir, filename)

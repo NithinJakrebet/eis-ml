@@ -88,8 +88,8 @@ def build_model_input(
     df = df[df['cycle number'].between(min_cycle, max_cycle)]
   
   # Apply frequency selection if requested
-  if frequency_selection is not None:
-    selected_frequencies = frequency_selection_func(df, method=frequency_selection)
+  if frequency_selection:
+    selected_frequencies = select_frequencies(df, n_frequencies=3)
   
   # Build state vectors (impedance features) with optional frequency selection
   state_vectors, valid_cycles = build_state_vector(df, selected_frequencies)
@@ -132,36 +132,12 @@ def build_model_input(
   
   return X, y
 
-def frequency_selection_func(df: pd.DataFrame, method='physics', n_frequencies=5):
-  # Get standard frequencies
+def select_frequencies(df: pd.DataFrame, n_frequencies=3):
+  """Apply physics-informed frequency selection."""
   frequencies = np.array(sorted(df['freq/Hz'].unique()))
-  
-  if method == 'physics': 
-    selected_freqs = physics_frequency_selection(
-      frequencies=frequencies, 
-      n_frequencies=n_frequencies
-    )  
-  elif method == 'correlation': 
-    selected_freqs = correlation_frequency_selection(
-      df=df,
-      frequencies=frequencies,
-      n_frequencies=n_frequencies
-    )  
-  elif method == 'combined': 
-    selected_freqs = combined_frequency_selection(
-      df=df,
-      frequencies=frequencies,
-      n_frequencies=n_frequencies
-    )
-
-  print(f"Selected frequencies ({method}): {sorted(selected_freqs)}")
-  return sorted(selected_freqs) 
-
-
-def physics_frequency_selection(frequencies, n_frequencies=5):
-  # Select frequencies in 1-10 Hz range as recommended by research
   physics_mask = (frequencies >= 1.0) & (frequencies <= 10.0)
   selected_freqs = frequencies[physics_mask]
+  
   if len(selected_freqs) < n_frequencies:
     # Add closest frequencies if not enough in range
     remaining = n_frequencies - len(selected_freqs)
@@ -170,68 +146,19 @@ def physics_frequency_selection(frequencies, n_frequencies=5):
     closest_indices = np.argsort(distances)[:remaining]
     selected_freqs = np.concatenate([selected_freqs, other_freqs[closest_indices]])
   else:
-    selected_freqs = selected_freqs[:n_frequencies]
-  return selected_freqs
-    
-def correlation_frequency_selection(df, frequencies,n_frequencies=5):
-  # Calculate correlation with capacity for each frequency
-  correlations = []
-  capacities = df.groupby('cycle number')['Capacity/mA.h'].first()
-  
-  for freq in frequencies:
-    freq_data = []
-    for cycle in sorted(capacities.index):
-      cycle_freq_data = df[(df['cycle number'] == cycle) & (df['freq/Hz'] == freq)]
-      if not cycle_freq_data.empty:
-        # Use magnitude of impedance
-        real_z = cycle_freq_data['Re(Z)/Ohm'].iloc[0]
-        imag_z = cycle_freq_data['Im(Z)/Ohm'].iloc[0]
-        magnitude = np.sqrt(real_z**2 + imag_z**2)
-        freq_data.append(magnitude)
-      else:
-        freq_data.append(np.nan)
-    
-    if len(freq_data) > 0:
-      corr = np.corrcoef(freq_data, capacities.values)[0,1]
-      correlations.append(abs(corr) if not np.isnan(corr) else 0)
-    else:
-      correlations.append(0)
-  
-  # Select top correlated frequencies
-  top_indices = np.argsort(correlations)[-n_frequencies:]
-  selected_freqs = frequencies[top_indices]
-  return selected_freqs
-  
-    
-def combined_frequency_selection(df, frequencies,n_frequencies=5):
-  # Physics-informed selection with correlation weighting
-  physics_weight = 2.0
-  correlations = []
-  capacities = df.groupby('cycle number')['Capacity/mA.h'].first()
-  
-  for freq in frequencies:
-    freq_data = []
-    for cycle in sorted(capacities.index):
-      cycle_freq_data = df[(df['cycle number'] == cycle) & (df['freq/Hz'] == freq)]
-      if not cycle_freq_data.empty:
-        real_z = cycle_freq_data['Re(Z)/Ohm'].iloc[0]
-        imag_z = cycle_freq_data['Im(Z)/Ohm'].iloc[0]
-        magnitude = np.sqrt(real_z**2 + imag_z**2)
-        freq_data.append(magnitude)
-      else:
-        freq_data.append(np.nan)
-    
-    if len(freq_data) > 0:
-      corr = np.corrcoef(freq_data, capacities.values)[0,1]
-      base_score = abs(corr) if not np.isnan(corr) else 0
-      # Boost score for physics-relevant frequencies
-      if 1.0 <= freq <= 10.0:
-        base_score *= physics_weight
-      correlations.append(base_score)
-    else:
-      correlations.append(0)
-  
-  top_indices = np.argsort(correlations)[-n_frequencies:]
-  selected_freqs = frequencies[top_indices]
-  return selected_freqs
-    
+    # If we have more than needed, prioritize frequencies closest to data-driven optimal: 3.2, 5.6 Hz
+    if len(selected_freqs) > n_frequencies:
+      optimal_targets = [3.2, 5.6, 10.0, 2.4, 1.8]  # Based on stability analysis
+      
+      # Calculate distances to optimal frequencies and select closest
+      scores = []
+      for freq in selected_freqs:
+        min_distance = min(abs(freq - target) for target in optimal_targets)
+        scores.append(min_distance)
+      
+      # Select frequencies with smallest distances to optimal targets
+      best_indices = np.argsort(scores)[:n_frequencies]
+      selected_freqs = selected_freqs[best_indices]
+      
+  print(f"Selected frequencies: {sorted(selected_freqs)}")
+  return sorted(selected_freqs) 

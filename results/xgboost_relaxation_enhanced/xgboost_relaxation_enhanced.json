@@ -1,0 +1,18 @@
+{
+  "model": "XGBoost Ensemble + Relaxation Features",
+  "frequency_selection": "physics + relaxation_effect",
+  "features": 21,
+  "samples_per_feature": 9.523809523809524,
+  "timestamp": "2025-09-15T21:12:01.316682",
+  "metrics": {
+    "rmse": 92.99138874058468,
+    "r2": 0.6515014427283379,
+    "mse": 8647.398379902541,
+    "mae": 59.46825073242187
+  },
+  "data_info": {
+    "train_samples": 200,
+    "test_samples": 200,
+    "cycle_range": "1-160"
+  }
+}

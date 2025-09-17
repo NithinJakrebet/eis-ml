@@ -19,19 +19,6 @@ def load_and_prepare_data(
     test_channels=None, 
     frequency_selection=None
 ):
-    """
-    Load and prepare training and testing data with flexible configuration.
-    
-    Args:
-        data_folder (str): Folder containing the CSV files. If None, uses DEFAULT_DATA_FOLDER
-        cycle_range (tuple): Optional (start_cycle, end_cycle) to filter data. If None, uses all cycles
-        train_channels (list): List of channels to use for training. If None, uses config.TRAIN_CHANNELS
-        test_channels (list): List of channels to use for testing. If None, uses config.TEST_CHANNELS
-        frequency_selection (str): Optional frequency selection method ('physics', 'correlation', 'combined', or None)
-        
-    Returns:
-        tuple: (X_train, X_test, y_train, y_test)
-    """
     # Set defaults
     if data_folder is None: data_folder = config.DEFAULT_DATA_FOLDER
     if train_channels is None: train_channels = config.TRAIN_CHANNELS
@@ -63,7 +50,7 @@ def load_and_prepare_data(
     # Print info about features
     feature_info = ""
     if frequency_selection:
-        feature_info = f" (using {frequency_selection} frequency selection)"
+        feature_info = "Using frequency selection"
     print(f"X_train: {X_train.shape}, y_train: {y_train.shape}{feature_info}")
     print(f"X_test: {X_test.shape}, y_test: {y_test.shape}{feature_info}")
     print(f"Capacity ranges - Train: {y_train.min():.1f}-{y_train.max():.1f}, Test: {y_test.min():.1f}-{y_test.max():.1f}")

@@ -2,17 +2,17 @@
   "model": "XGBoost Ensemble",
   "frequency_selection": "physics",
   "features": 12,
-  "samples_per_feature": 13.333333333333334,
-  "timestamp": "2025-09-10T15:27:42.372391",
+  "samples_per_feature": 16.666666666666668,
+  "timestamp": "2025-09-15T20:57:29.129427",
   "metrics": {
-    "rmse": 69.37820029079971,
-    "r2": 0.7389594046444199,
-    "mse": 4813.334675590321,
-    "mae": 44.61105804443359
+    "rmse": 90.29337144051841,
+    "r2": 0.6714304930211139,
+    "mse": 8152.892926095426,
+    "mae": 57.94063354492187
   },
   "data_info": {
-    "train_samples": 160,
-    "test_samples": 160,
+    "train_samples": 200,
+    "test_samples": 200,
     "cycle_range": "1-160"
   }
 }
