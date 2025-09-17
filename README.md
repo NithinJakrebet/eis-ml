@@ -80,3 +80,47 @@ your-repo/
 ├── requirements.txt     # List of Python dependencies.
 └── README.md            # This file.
 ```
+
+# Raw Data Information from Hardware Team
+
+## 3/22/24 - A8, B8 Channels from Selva
+- **Number of Cycles**: ~150
+- **Details**:
+  - Channels: 
+    - **B1 to B4**: Low C-Rate, Low Temperature (?? °C)
+    - **B5 to B8**: Low C-Rate, Room Temperature (25 °C)
+
+## 04/03/24
+- **Number of Cycles**: ~265
+- **Details**:
+  - Channels: A1 to A8
+  - High C-Rate, Room Temperature (25 °C)
+  - **Failures**:
+    - All channels except A3 and A6 have achieved failure
+
+# EIS-ML Project Overview
+
+## Development Approach
+- **Structured code → Python scripts** (`scripts/` folder)
+- **Exploration & EDA → Jupyter notebooks** (`notebooks/` folder)
+
+## Data Structure
+**Input Features:**
+- **State Vector**: Real and imaginary impedance components [Zre(ω1), Zim(ω1), ..., Zre(ωn), Zim(ωn)] from EIS measurements
+- **Action Vector**: Charge/discharge current profiles during battery cycling
+- **Target**: Battery discharge capacity (mAh)
+
+**Key Data Points:**
+- EIS measurements at `Ns=1` or `Ns=6` (PEIS steps)
+- Frequency range: 0.02Hz - 20kHz (~60 frequencies)
+- Current data from CC/CV steps for action vectors
+
+## Machine Learning Models
+1. **Gaussian Process Regression (GPR)** with ARD kernels
+2. **XGBoost** (Gradient Boosted Decision Trees)
+
+## Regression Task
+Learn mapping: `Qn = f(sn, an)` where:
+- `sn` = battery state (EIS impedance)
+- `an` = action (charge/discharge protocol)  
+- `Qn` = resulting capacity

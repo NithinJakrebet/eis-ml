@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 import os
 from plots import residual_analysis_plots, fft_analysis_plots
+import config
 
 def evaluate_model(y_true, y_pred):
     """Basic model evaluation metrics."""
@@ -16,8 +17,7 @@ def evaluate_model(y_true, y_pred):
 
 def save_results(filename, X_train, X_test, metrics, model_info, fig=None, save_plot=True, save_data=True):
     # Create results directory and subdirectory for this experiment
-    results_dir = os.path.join(os.path.dirname(__file__), '..', 'results')
-    experiment_dir = os.path.join(results_dir, filename)
+    experiment_dir = os.path.join(config.RESULTS_DIR, filename)
     os.makedirs(experiment_dir, exist_ok=True)
     
     if save_plot:
@@ -56,18 +56,7 @@ def save_results(filename, X_train, X_test, metrics, model_info, fig=None, save_
         print(f"Saved metrics: {json_path}")
 
 def save_residual_analysis(filename, residuals, cycle_numbers, y_pred_mean):
-    """
-    Save residual analysis plots and statistics.
-    
-    Args:
-        filename: Base filename for saved files
-        residuals: Residual values
-        cycle_numbers: Cycle numbers for temporal analysis
-        y_pred_mean: Predicted values
-    """
-    # Create results directory and subdirectory for this experiment
-    results_dir = os.path.join(os.path.dirname(__file__), '..', 'results')
-    experiment_dir = os.path.join(results_dir, filename)
+    experiment_dir = os.path.join(config.RESULTS_DIR, filename)
     os.makedirs(experiment_dir, exist_ok=True)
     
     # Create dummy y_true for the plotting function
@@ -106,19 +95,10 @@ def save_residual_analysis(filename, residuals, cycle_numbers, y_pred_mean):
     return residual_stats
 
 def save_fft_analysis(filename, residuals, cycle_numbers):
-    """
-    Save FFT analysis for detecting sinusoidal patterns.
-    
-    Args:
-        filename: Base filename for saved files
-        residuals: Residual values
-        cycle_numbers: Cycle numbers for temporal analysis
-    """
     from scipy.fft import fft, fftfreq
     
     # Create results directory and subdirectory for this experiment
-    results_dir = os.path.join(os.path.dirname(__file__), '..', 'results')
-    experiment_dir = os.path.join(results_dir, filename)
+    experiment_dir = os.path.join(config.RESULTS_DIR, filename)
     os.makedirs(experiment_dir, exist_ok=True)
     
     # Sort by cycle numbers

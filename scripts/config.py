@@ -1,7 +1,3 @@
-"""
-Configuration file for EIS-ML project
-"""
-
 # Data configuration
 CHANNELS = ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8']
 TRAIN_CHANNELS = ['A1', 'A2', 'A3', 'A4', 'A5', 'A6']
@@ -27,17 +23,19 @@ MODEL_PARAMS = {
 # Ensemble parameters
 NUM_ENSEMBLE = 10
 
-# Data folder
-DEFAULT_DATA_FOLDER = "03-06-24"
+DEFAULT_DATA_FOLDER = "../data/04-03-2024"
 
 # Results configuration
 RESULTS_DIR = "../results"
 MODELS_DIR = "../models"
 
-def print_config():
-    print("=== EIS-ML Configuration ===")
-    print(f"Data folder: {DEFAULT_DATA_FOLDER}")
-    print(f"Training channels: {TRAIN_CHANNELS}")
-    print(f"Testing channels: {TEST_CHANNELS}")
-    print(f"Features: {N_FEATURES}")
-    print(f"Ensemble size: {NUM_ENSEMBLE}")
+
+# config.py (add these if you want to override defaults)
+GPR_PARAMS = {
+    "noise_level": 1e-6,
+    "length_scale_bounds": (1e-5, 1e5),
+    "noise_level_bounds": (1e-12, 1e-3),
+    "normalize_y": True,
+    "n_restarts_optimizer": 5,
+    "random_state": 42,
+}

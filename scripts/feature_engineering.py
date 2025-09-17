@@ -15,17 +15,12 @@ def build_state_vector(df: pd.DataFrame, selected_frequencies=None):
   then min‑max normalize.
   """
   # Keep only valid EIS rows with frequency filtering
-  df = (
-    df.dropna()
-      .query("`freq/Hz` > 0.2 and `freq/Hz` <= 20000")
-      .query("Ns in [1,6]")
+  df = (df.dropna()
+        .query("`freq/Hz` > 0.2 and `freq/Hz` <= 20000")
+        .query("Ns in [1,6]")
   )
   
-  # Use selected frequencies or all frequencies
-  if selected_frequencies is None:
-    frequencies_to_use = sorted(df['freq/Hz'].unique())
-  else:
-    frequencies_to_use = selected_frequencies
+  frequencies_to_use = selected_frequencies if selected_frequencies is not None else sorted(df['freq/Hz'].unique())
   
   valid_cycles = sorted(df['cycle number'].unique())
   state_vectors = []
@@ -36,7 +31,6 @@ def build_state_vector(df: pd.DataFrame, selected_frequencies=None):
     # Sort by frequency to ensure consistent ordering
     sub = sub.sort_values('freq/Hz')
     
-    # Extract impedance values at specified frequencies in order
     real_z = []
     imag_z = []
     
@@ -78,24 +72,24 @@ def build_action_vector(df: pd.DataFrame):
 def build_model_input(
   df, 
   cycle_range=None, 
-  action_vector=True, 
+  include_action_vector=True, 
   selected_frequencies=None, 
   frequency_selection=None
 ):
+
   # Apply cycle range filter if specified
   if cycle_range:
     min_cycle, max_cycle = cycle_range
     df = df[df['cycle number'].between(min_cycle, max_cycle)]
   
   # Apply frequency selection if requested
-  if frequency_selection:
-    selected_frequencies = select_frequencies(df, n_frequencies=3)
-  
+  if frequency_selection: selected_frequencies = select_frequencies(df, n_frequencies=3)
+
   # Build state vectors (impedance features) with optional frequency selection
   state_vectors, valid_cycles = build_state_vector(df, selected_frequencies)
   
   # Build action vectors if requested
-  if action_vector:
+  if include_action_vector:
     action_cycles, action_matrix = build_action_vector(df)
     
     # Create lookup for action vectors by cycle
@@ -120,6 +114,7 @@ def build_model_input(
     X = np.array(X_list)
     y = np.array(y_list)
   else:
+    # Use only state vectors 
     X = np.array(state_vectors)
     # Extract capacity targets for all valid cycles
     y = []
