@@ -1,18 +1,18 @@
 {
-  "model": "XGBoost Ensemble + Relaxation Features",
-  "frequency_selection": "physics + relaxation_effect",
-  "features": 21,
-  "samples_per_feature": 9.523809523809524,
-  "timestamp": "2025-09-15T21:12:01.316682",
+  "model": "XGBoost Ensemble Improved",
+  "frequency_selection": "physics (stratified split)",
+  "features": 8,
+  "samples_per_feature": 25.0,
+  "timestamp": "2025-09-21T10:45:54.685081",
   "metrics": {
-    "rmse": 92.99138874058468,
-    "r2": 0.6515014427283379,
-    "mse": 8647.398379902541,
-    "mae": 59.46825073242187
+    "rmse": 144.4006406819295,
+    "r2": 0.35787654176232553,
+    "mse": 20851.54502935171,
+    "mae": 109.33559326171876
   },
   "data_info": {
     "train_samples": 200,
     "test_samples": 200,
-    "cycle_range": "1-160"
+    "cycle_range": "1-200"
   }
 }
