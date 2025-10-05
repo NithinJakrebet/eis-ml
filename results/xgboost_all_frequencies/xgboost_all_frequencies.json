@@ -1,14 +1,14 @@
 {
   "model": "XGBoost Ensemble",
   "frequency_selection": "none (all 69 frequencies)",
-  "features": 8,
-  "samples_per_feature": 25.0,
-  "timestamp": "2025-09-17T20:59:47.416440",
+  "features": 140,
+  "samples_per_feature": 1.4285714285714286,
+  "timestamp": "2025-10-04T17:21:14.847841",
   "metrics": {
-    "rmse": 92.92608684231215,
-    "r2": 0.6519907273176837,
-    "mse": 8635.257615824938,
-    "mae": 59.33747802734375
+    "rmse": 126.81488078208194,
+    "r2": 0.3518792096143748,
+    "mse": 16082.013987773656,
+    "mae": 94.995849609375
   },
   "data_info": {
     "train_samples": 200,

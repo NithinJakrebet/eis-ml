@@ -8,7 +8,6 @@ from plots import residual_analysis_plots, fft_analysis_plots
 import config
 
 def evaluate_model(y_true, y_pred):
-    """Basic model evaluation metrics."""
     mse = mean_squared_error(y_true, y_pred)
     rmse = np.sqrt(mse)
     r2 = r2_score(y_true, y_pred)
@@ -16,7 +15,6 @@ def evaluate_model(y_true, y_pred):
     return [rmse, r2, mse, mae]
 
 def save_results(filename, X_train, X_test, metrics, model_info, fig=None, save_plot=True, save_data=True):
-    # Create results directory and subdirectory for this experiment
     experiment_dir = os.path.join(config.RESULTS_DIR, filename)
     os.makedirs(experiment_dir, exist_ok=True)
     

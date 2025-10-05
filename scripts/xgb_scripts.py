@@ -78,9 +78,15 @@ def _prepare_validation_split(X_train, y_train, sample_weights, validation_split
     
     return X_train_fit, y_train_fit, weights_fit, X_val, y_val
 
-def train_ensemble_model(X_train, y_train, n_models=None, model_params=None, 
-                        use_improvements=False, use_sample_weights=False, 
-                        weight_method='inverse_frequency'):
+def train_ensemble_model(
+    X_train, 
+    y_train, 
+    n_models=None, 
+    model_params=None, 
+    use_improvements=False, 
+    use_sample_weights=False, 
+    weight_method='inverse_frequency'
+):
     """Enhanced ensemble training with optional improvements."""
     if n_models is None: n_models = config.NUM_ENSEMBLE
     

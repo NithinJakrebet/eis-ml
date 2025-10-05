@@ -1,7 +1,7 @@
 # Data configuration
 CHANNELS = ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8']
-TRAIN_CHANNELS = ['A1', 'A2', 'A3', 'A4', 'A5', 'A6']
-TEST_CHANNELS = ['A7', 'A8']
+TRAIN_CHANNELS = ['A1', 'A2', 'A3', 'A4', 'A7', 'A8']
+TEST_CHANNELS = ['A2', 'A5']
 
 # EIS data filtering parameters
 FREQ_MIN = 0.2
@@ -22,8 +22,6 @@ MODEL_PARAMS = {
 
 # Ensemble parameters
 NUM_ENSEMBLE = 10
-
-DEFAULT_DATA_FOLDER = "../data/04-03-2024"
 
 # Results configuration
 RESULTS_DIR = "../results"
