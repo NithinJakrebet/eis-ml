@@ -3,39 +3,39 @@ import pandas as pd
 import numpy as np
 
 def degradation(df: pd.DataFrame):
-      capacity = df['Capacity/mA.h']
-      cycle_number = df['cycle number']
-      
-      plt.figure(figsize=(8, 8))
-      plt.scatter(cycle_number, capacity, alpha=0.6)
-      plt.xlabel('Cycle Number')
-      plt.ylabel('Capacity (mA.h)')
-      plt.title('Capacity vs. Cycle Number')
-      plt.show()
+    capacity = df['Capacity/mA.h']
+    cycle_number = df['cycle number']
+    
+    plt.figure(figsize=(8, 8))
+    plt.scatter(cycle_number, capacity, alpha=0.6)
+    plt.xlabel('Cycle Number')
+    plt.ylabel('Capacity (mA.h)')
+    plt.title('Capacity vs. Cycle Number')
+    plt.show()
 
       
       
 def unique_frequencies(unique_freqs: np.array):
-      plt.figure(figsize=(12, 5))
+    plt.figure(figsize=(12, 5))
 
-      # Linear scale plot
-      plt.subplot(1, 2, 1)
-      plt.plot(unique_freqs, 'o-', label='Frequency')
-      plt.xlabel('Index')
-      plt.ylabel('Frequency (Hz)')
-      plt.title('Unique Frequencies (Linear Scale)')
-      plt.legend()
+    # Linear scale plot
+    plt.subplot(1, 2, 1)
+    plt.plot(unique_freqs, 'o-', label='Frequency')
+    plt.xlabel('Index')
+    plt.ylabel('Frequency (Hz)')
+    plt.title('Unique Frequencies (Linear Scale)')
+    plt.legend()
 
-      # Logarithmic scale plot (y-axis on log scale)
-      plt.subplot(1, 2, 2)
-      plt.semilogy(unique_freqs, 'o-', label='Frequency')
-      plt.xlabel('Index')
-      plt.ylabel('Frequency (Hz)')
-      plt.title('Unique Frequencies (Logarithmic Scale)')
-      plt.legend()
+    # Logarithmic scale plot (y-axis on log scale)
+    plt.subplot(1, 2, 2)
+    plt.semilogy(unique_freqs, 'o-', label='Frequency')
+    plt.xlabel('Index')
+    plt.ylabel('Frequency (Hz)')
+    plt.title('Unique Frequencies (Logarithmic Scale)')
+    plt.legend()
 
-      plt.tight_layout()
-      plt.show()
+    plt.tight_layout()
+    plt.show()
 
       
 def nyquist(df: pd.DataFrame):

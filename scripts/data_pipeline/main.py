@@ -5,9 +5,14 @@ def load_and_prepare_data(
     data_folder=None, 
     frequency_selection=None, 
     include_action_vector=True, 
-    cycle_range=None
+    cycle_range=None,
+    method="leave_two_out"
 ):
-    df_train, df_test = test_train_split(data_folder=data_folder, cycle_range=cycle_range)
+    df_train, df_test = test_train_split(
+        data_folder=data_folder, 
+        cycle_range=cycle_range,
+        method=method
+    )
     
     X_train, y_train = build_model_input(
         df_train, 

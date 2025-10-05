@@ -2,7 +2,7 @@ import pandas as pd
 import os
 
 def load_single_channel(data_folder, channel, cycle_range=None):
-    file_path = os.path.join("../data", data_folder, f"{channel}.csv")
+    file_path = os.path.join(data_folder, f"{channel}.csv")
     df = pd.read_csv(file_path)
     df = df.dropna()
     

@@ -1,7 +1,7 @@
 # Data configuration
 CHANNELS = ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8']
-TRAIN_CHANNELS = ['A1', 'A2', 'A3', 'A4', 'A7', 'A8']
-TEST_CHANNELS = ['A2', 'A5']
+TRAIN_CHANNELS = ['A1', 'A2', 'A3', 'A4', 'A5', 'A6']
+TEST_CHANNELS = ['A7', 'A8']
 
 # EIS data filtering parameters
 FREQ_MIN = 0.2
