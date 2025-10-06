@@ -2,8 +2,7 @@
   "model": "XGBoost Ensemble",
   "frequency_selection": "none (all 69 frequencies)",
   "features": 140,
-  "samples_per_feature": 1.4285714285714286,
-  "timestamp": "2025-10-04T17:21:14.847841",
+  "timestamp": "2025-10-06T14:47:17.385206",
   "metrics": {
     "rmse": 126.81488078208194,
     "r2": 0.3518792096143748,
@@ -12,7 +11,6 @@
   },
   "data_info": {
     "train_samples": 200,
-    "test_samples": 200,
-    "cycle_range": "1-200"
+    "test_samples": 200
   }
 }

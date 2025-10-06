@@ -1,9 +1,6 @@
 {
   "mean": -94.945185546875,
   "std": 84.06798278324,
-  "min": -282.25732421875,
-  "max": 5.03076171875,
   "correlation_with_cycle": -0.922716606575335,
-  "temporal_bias_detected": true,
-  "timestamp": "2025-10-04T17:21:15.729257"
+  "temporal_bias_detected": true
 }

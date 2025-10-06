@@ -6,6 +6,7 @@ def load_and_prepare_data(
     frequency_selection=None, 
     include_action_vector=True, 
     cycle_range=None,
+    frequencies_to_use=None,
     method="leave_two_out"
 ):
     df_train, df_test = test_train_split(
@@ -17,13 +18,15 @@ def load_and_prepare_data(
     X_train, y_train = build_model_input(
         df_train, 
         frequency_selection=frequency_selection, 
-        include_action_vector=include_action_vector
+        include_action_vector=include_action_vector,
+        frequencies_to_use=frequencies_to_use
     )
     
     X_test, y_test = build_model_input(
         df_test, 
         frequency_selection=frequency_selection, 
-        include_action_vector=include_action_vector
+        include_action_vector=include_action_vector,
+        frequencies_to_use=frequencies_to_use
     )
     
     print(f"X_train: {X_train.shape}, y_train: {y_train.shape}")

@@ -1,21 +1,22 @@
 import numpy as np
 from .state_vector import build_state_vector
 from .action_vector import build_action_vector
-from .frequency_selection import get_physics_frequencies
+from .frequency_selection import get_frequencies_to_use
 
 def build_model_input(
     df, 
     cycle_range=None, 
     include_action_vector=True, 
     selected_frequencies=None, 
-    frequency_selection=None
+    frequency_selection=None,
+    frequencies_to_use=None
 ): 
     
     if cycle_range:
         min_cycle, max_cycle = cycle_range
         df = df[df['cycle number'].between(min_cycle, max_cycle)]
     
-    if frequency_selection: selected_frequencies = get_physics_frequencies()
+    selected_frequencies = frequencies_to_use if frequencies_to_use is not None else get_frequencies_to_use(frequency_selection)
 
     state_vectors, valid_cycles = build_state_vector(df, selected_frequencies)
     

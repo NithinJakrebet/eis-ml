@@ -87,7 +87,6 @@ def train_ensemble_model(
     use_sample_weights=False, 
     weight_method='inverse_frequency'
 ):
-    """Enhanced ensemble training with optional improvements."""
     if n_models is None: n_models = config.NUM_ENSEMBLE
     
     # Use improved parameters if requested

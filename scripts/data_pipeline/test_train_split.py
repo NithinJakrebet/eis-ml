@@ -24,8 +24,10 @@ def leave_two_out(cycle_range, data_folder):
     
     train_channels_data = {}
     test_channels_data = {}
+    
     for channel in train_channels: train_channels_data[channel] = load_single_channel(data_folder, channel, cycle_range)    
     for channel in test_channels: test_channels_data[channel] = load_single_channel(data_folder, channel, cycle_range)
+   
     train_dfs = list(train_channels_data.values())
     test_dfs = list(test_channels_data.values())
     
@@ -33,7 +35,6 @@ def leave_two_out(cycle_range, data_folder):
 
 def bin_and_split(cycle_range, data_folder):
     all_channels = config.CHANNELS
-    
     all_channels_data = {}
     for channel in all_channels: all_channels_data[channel] = load_single_channel(data_folder, channel, cycle_range)
     
@@ -42,9 +43,7 @@ def bin_and_split(cycle_range, data_folder):
     
     for channel, df in all_channels_data.items():
         if df is None or df.empty: continue
-            
         end_of_cycle_capacities = df.groupby('cycle number')['Capacity/mA.h'].last()
-        
         capacity_bins = pd.qcut(end_of_cycle_capacities, q=10, labels=False, duplicates='drop')
         
         channel_train_data = []
@@ -53,7 +52,6 @@ def bin_and_split(cycle_range, data_folder):
         for bin_num in np.unique(capacity_bins):
             cycles_in_bin = end_of_cycle_capacities[capacity_bins == bin_num].index
             cycles_in_bin = sorted(cycles_in_bin)
-            
             split_point = int(len(cycles_in_bin) * 0.8)
             train_cycles = cycles_in_bin[:split_point]
             test_cycles = cycles_in_bin[split_point:]
