@@ -9,7 +9,8 @@ def build_model_input(
     include_action_vector=True, 
     selected_frequencies=None, 
     frequency_selection=None,
-    frequencies_to_use=None
+    frequencies_to_use=None,
+    components_to_use=None
 ): 
     
     if cycle_range:
@@ -18,7 +19,7 @@ def build_model_input(
     
     selected_frequencies = frequencies_to_use if frequencies_to_use is not None else get_frequencies_to_use(frequency_selection)
 
-    state_vectors, valid_cycles = build_state_vector(df, selected_frequencies)
+    state_vectors, valid_cycles = build_state_vector(df, selected_frequencies, components_to_use)
     
     if include_action_vector:
         action_cycles, action_matrix = build_action_vector(df)

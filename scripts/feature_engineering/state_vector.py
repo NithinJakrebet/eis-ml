@@ -2,7 +2,11 @@ import numpy as np
 import pandas as pd
 from .normalization import minmax_normalize
 
-def build_state_vector(df: pd.DataFrame, selected_frequencies=None): # For each cycle, extract impedance values at frequencies, then min‑max normalize.
+def build_state_vector(
+    df: pd.DataFrame, 
+    selected_frequencies=None,
+    components_to_use=None
+    ): 
     df = (
         df.dropna()
           .query("`freq/Hz` > 0.2 and `freq/Hz` <= 20000")
@@ -33,6 +37,17 @@ def build_state_vector(df: pd.DataFrame, selected_frequencies=None): # For each 
         real_norm = minmax_normalize(np.array(real_z))
         imag_norm = minmax_normalize(np.array(imag_z))
         
-        state_vectors.append(np.concatenate([real_norm, imag_norm]))
+        # Apply component selection if specified
+        if components_to_use is not None:
+            selected_features = []
+            for i, component_code in enumerate(components_to_use):
+                if component_code == 0:  # Real component
+                    selected_features.append(real_norm[i])
+                elif component_code == 1:  # Imaginary component
+                    selected_features.append(imag_norm[i])
+            state_vectors.append(np.array(selected_features))
+        else:
+            # Default behavior: use both components for all frequencies
+            state_vectors.append(np.concatenate([real_norm, imag_norm]))
     
     return state_vectors, valid_cycles
