@@ -19,10 +19,8 @@ def save_results(filename, X_train, X_test, metrics, model_info, fig=None):
     os.makedirs(experiment_dir, exist_ok=True)
     
     plot_path = os.path.join(experiment_dir, f'{filename}.png')
-    if fig is not None:
-        fig.savefig(plot_path, dpi=300, bbox_inches='tight')
-    else:
-        plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+    if fig is not None: fig.savefig(plot_path, dpi=300, bbox_inches='tight')
+    else: plt.savefig(plot_path, dpi=300, bbox_inches='tight')
     
     results = {
         'model': model_info.get('model', 'Unknown'),
@@ -42,8 +40,7 @@ def save_results(filename, X_train, X_test, metrics, model_info, fig=None):
     }
 
     json_path = os.path.join(experiment_dir, f'{filename}.json')
-    with open(json_path, 'w') as f:
-        json.dump(results, f, indent=2)
+    with open(json_path, 'w') as f: json.dump(results, f, indent=2)
 
 def save_residual_analysis(filename, residuals, cycle_numbers, y_pred_mean):
     experiment_dir = os.path.join(config.RESULTS_DIR, filename)

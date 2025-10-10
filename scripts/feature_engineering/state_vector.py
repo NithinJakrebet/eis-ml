@@ -37,17 +37,12 @@ def build_state_vector(
         real_norm = minmax_normalize(np.array(real_z))
         imag_norm = minmax_normalize(np.array(imag_z))
         
-        # Apply component selection if specified
         if components_to_use is not None:
             selected_features = []
             for i, component_code in enumerate(components_to_use):
-                if component_code == 0:  # Real component
-                    selected_features.append(real_norm[i])
-                elif component_code == 1:  # Imaginary component
-                    selected_features.append(imag_norm[i])
+                if component_code == 0:  selected_features.append(real_norm[i])
+                elif component_code == 1: selected_features.append(imag_norm[i])
             state_vectors.append(np.array(selected_features))
-        else:
-            # Default behavior: use both components for all frequencies
-            state_vectors.append(np.concatenate([real_norm, imag_norm]))
+        else: state_vectors.append(np.concatenate([real_norm, imag_norm]))
     
     return state_vectors, valid_cycles

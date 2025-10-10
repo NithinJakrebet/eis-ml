@@ -1,8 +1,8 @@
 {
   "model": "XGBoost Ensemble",
-  "frequency_selection": "unknown",
+  "frequency_selection": "all",
   "features": 140,
-  "timestamp": "2025-10-06T23:07:25.595352",
+  "timestamp": "2025-10-07T10:43:26.558676",
   "metrics": {
     "rmse": 126.81488078208194,
     "r2": 0.3518792096143748,

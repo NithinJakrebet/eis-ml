@@ -20,7 +20,7 @@ MODEL_PARAMS = {
     'random_state': 42
 }
 
-# Ensemble parameters
+# Ensemble parameters (CV folds)
 NUM_ENSEMBLE = 10
 
 # Results configuration

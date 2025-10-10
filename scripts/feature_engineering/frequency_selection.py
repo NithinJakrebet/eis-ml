@@ -18,6 +18,6 @@ def get_frequencies_to_use(frequency_selection):
         case _: return unique_frequencies  # Default fallback
     
     
-def physics_frequencies(): return [f for f in unique_frequencies if 1 <= f <= 10]
+def physics_frequencies(): return [f for f in unique_frequencies if 1 <= f <= 20]
 
 def feature_analysis(): return [1.78, 2.37, 3.16, 5.62, 10.0]
