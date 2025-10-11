@@ -38,7 +38,7 @@ def unique_frequencies(unique_freqs: np.array):
     plt.show()
 
       
-def nyquist(df: pd.DataFrame):
+def nyquist(df: pd.DataFrame, title_prefix=""):
     # Prepare full dataset values
     Re_Z_full = df['Re(Z)/Ohm'].values
     Im_Z_full = df['Im(Z)/Ohm'].values
@@ -55,7 +55,7 @@ def nyquist(df: pd.DataFrame):
     axes[0].plot(Re_Z_full, Im_Z_full, 'o', markersize=5, alpha=0.7, label="Impedance Data")
     axes[0].set_xlabel('Re(Z) / Ohm')
     axes[0].set_ylabel('Im(Z) / Ohm')
-    axes[0].set_title('Nyquist Plot of Battery Impedance')
+    axes[0].set_title(f'{title_prefix} Nyquist Plot of Battery Impedance')
     axes[0].grid(True)
     axes[0].axis('equal')
     axes[0].legend()
@@ -64,7 +64,7 @@ def nyquist(df: pd.DataFrame):
     axes[1].plot(Re_Z_filtered, Im_Z_filtered, 'o', markersize=5, alpha=0.7, label="Impedance Data")
     axes[1].set_xlabel('Re(Z) / Ohm')
     axes[1].set_ylabel('Im(Z) / Ohm')
-    axes[1].set_title('Nyquist Plot of Battery Impedance (EIS States)')
+    axes[1].set_title(f'{title_prefix} Nyquist Plot of Battery Impedance (EIS States)')
     axes[1].grid(True)
     axes[1].axis('equal')
     axes[1].legend()

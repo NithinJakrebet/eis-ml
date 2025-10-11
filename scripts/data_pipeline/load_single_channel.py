@@ -11,5 +11,9 @@ def load_single_channel(data_folder, channel, cycle_range=None):
     if cycle_range is not None:
         start_cycle, end_cycle = cycle_range
         df = df[(df['cycle number'] >= start_cycle) & (df['cycle number'] <= end_cycle)].copy()
+    else:
+        # Load all cycles except the last one
+        max_cycle = df['cycle number'].max()
+        df = df[df['cycle number'] < max_cycle].copy()
     
     return df
