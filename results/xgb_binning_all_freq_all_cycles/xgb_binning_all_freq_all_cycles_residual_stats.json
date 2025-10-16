@@ -1,6 +1,6 @@
 {
-  "mean": -11.977623979668854,
-  "std": 351.3707148832849,
-  "correlation_with_cycle": -0.2952695114453575,
-  "temporal_bias_detected": true
+  "mean": -84.29657894937614,
+  "std": 525.1434374451535,
+  "correlation_with_cycle": -0.08282355111748511,
+  "temporal_bias_detected": false
 }

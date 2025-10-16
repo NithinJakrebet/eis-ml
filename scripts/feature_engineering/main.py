@@ -6,7 +6,7 @@ from .frequency_selection import get_frequencies_to_use
 def build_model_input(
     df, 
     cycle_range=None, 
-    include_action_vector=True, 
+    include_action_vector=False, 
     selected_frequencies=None, 
     frequency_selection=None,
     frequencies_to_use=None,

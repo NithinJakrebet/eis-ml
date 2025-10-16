@@ -4,7 +4,7 @@ from feature_engineering.main import build_model_input
 def load_and_prepare_data(
     data_folder=None, 
     frequency_selection=None, 
-    include_action_vector=True, 
+    include_action_vector=False, 
     cycle_range=None,
     frequencies_to_use=None,
     components_to_use=None,

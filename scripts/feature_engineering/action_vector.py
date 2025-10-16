@@ -1,13 +1,21 @@
 import numpy as np
 import pandas as pd
 
-# Build action vector from charge/discharge data for each cycle.
-def build_action_vector(df: pd.DataFrame): 
-    max_charge = df.groupby('cycle number')['Q charge/mA.h'].max()
-    max_discharge = df.groupby('cycle number')['Q discharge/mA.h'].max()
-    cycle_numbers = np.array(sorted(max_charge.index))
-    charge_values = max_charge.reindex(cycle_numbers).values
-    discharge_values = max_discharge.reindex(cycle_numbers).values
-    action_matrix = np.vstack([charge_values, discharge_values]).T
+def build_action_vector(df: pd.DataFrame):
+    cycles = np.sort(df['cycle number'].unique())
+    rows = []
 
-    return cycle_numbers, action_matrix
+    for c in cycles:
+        d = df[df['cycle number'] == c]
+
+        charge_rows = d[d['Ns'].isin([3])]
+        discharge_rows = d[d['Ns'].isin([8])]
+
+        I_charge = (np.median(np.abs(charge_rows['I/mA'].values))
+                    if not charge_rows.empty else np.nan)
+        I_discharge = (np.median(np.abs(discharge_rows['I/mA'].values))
+                       if not discharge_rows.empty else np.nan)
+
+        rows.append([float(I_charge), float(I_discharge)])
+
+    return cycles, np.asarray(rows, dtype=float)
