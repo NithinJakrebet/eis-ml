@@ -14,32 +14,13 @@ def test_train_split(
     match method:
         case "leave_two_out": df_train, df_test = leave_two_out(cycle_range, data_folder)
         case "bin_and_split": df_train, df_test = bin_and_split(cycle_range, data_folder)
+        case "temporal": df_train, df_test = temporal_split(data_folder)
         case _: raise ValueError(f"Unknown split method: {method}")
         
     return df_train, df_test
    
    
    
-   
-    
-def leave_two_out(cycle_range, data_folder):
-    # leave 2 out method
-    train_channels = config.TRAIN_CHANNELS
-    test_channels = config.TEST_CHANNELS
-    train_channels_data = {}
-    test_channels_data = {}
-    for channel in train_channels: train_channels_data[channel] = load_single_channel(data_folder, channel, cycle_range)    
-    for channel in test_channels: test_channels_data[channel] = load_single_channel(data_folder, channel, cycle_range)
-    train_dfs = list(train_channels_data.values())
-    test_dfs = list(test_channels_data.values())
-
-    return pd.concat(train_dfs, ignore_index=True), pd.concat(test_dfs, ignore_index=True)
-
-
-
-
-
-
 
 def bin_and_split(cycle_range, data_folder):
     all_channels = [
@@ -82,3 +63,60 @@ def bin_and_split(cycle_range, data_folder):
     
     return pd.concat(train_dfs, ignore_index=True), pd.concat(test_dfs, ignore_index=True)
             
+       
+def temporal_split(data_folder):
+    """
+    Temporal split: Each battery is split 80/20 by cycle number.
+    Train on first 80% of cycles, test on last 20% of cycles.
+    This simulates real-world deployment: predict future degradation.
+    """
+    all_channels = [
+        f[:-4] for f in os.listdir(data_folder)
+        if f.endswith('.csv')
+    ]
+    
+    all_channels_data = {}
+    for channel in all_channels: 
+        all_channels_data[channel] = load_single_channel(data_folder, channel, cycle_range=None)
+    
+    train_dfs = []
+    test_dfs = []
+    
+    for channel, df in all_channels_data.items():
+        if df is None or df.empty: 
+            continue
+        
+        # Get all cycle numbers for this channel
+        all_cycles = sorted(df['cycle number'].unique())
+        
+        # Split at 80% mark
+        split_index = int(len(all_cycles) * 0.8)
+        train_cycles = all_cycles[:split_index]
+        test_cycles = all_cycles[split_index:]
+        
+        # Extract data for train and test cycles
+        train_data = df[df['cycle number'].isin(train_cycles)]
+        test_data = df[df['cycle number'].isin(test_cycles)]
+        
+        if not train_data.empty:
+            train_dfs.append(train_data)
+        if not test_data.empty:
+            test_dfs.append(test_data)
+    
+    return pd.concat(train_dfs, ignore_index=True), pd.concat(test_dfs, ignore_index=True)
+            
+            
+def leave_two_out(cycle_range, data_folder):
+    # leave 2 out method
+    train_channels = config.TRAIN_CHANNELS
+    test_channels = config.TEST_CHANNELS
+    train_channels_data = {}
+    test_channels_data = {}
+    for channel in train_channels: train_channels_data[channel] = load_single_channel(data_folder, channel, cycle_range)    
+    for channel in test_channels: test_channels_data[channel] = load_single_channel(data_folder, channel, cycle_range)
+    train_dfs = list(train_channels_data.values())
+    test_dfs = list(test_channels_data.values())
+
+    return pd.concat(train_dfs, ignore_index=True), pd.concat(test_dfs, ignore_index=True)
+
+

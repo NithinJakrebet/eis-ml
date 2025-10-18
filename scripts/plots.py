@@ -97,11 +97,6 @@ def model_predictions(y_true, y_pred_mean, y_pred_std=None, title_prefix="Model"
     plt.title(f'{title_prefix}: Residual Plot')
     plt.grid(True)
     
-    # Print summary statistics
-    print(f"\n{title_prefix} Prediction Analysis:")
-    print(f"  Mean Absolute Error: {np.mean(np.abs(residuals)):.4f}")
-    print(f"  Root Mean Square Error: {np.sqrt(np.mean(residuals**2)):.4f}")
-    print(f"  Residual Std: {np.std(residuals):.4f}")
     if y_pred_std is not None:
         print(f"  Mean Prediction Uncertainty: {np.mean(y_pred_std):.4f}")
     

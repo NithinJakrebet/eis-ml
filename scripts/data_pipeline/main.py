@@ -3,8 +3,6 @@ from feature_engineering.main import build_model_input
 
 def load_and_prepare_data(
     data_folder=None, 
-    frequency_selection=None, 
-    include_action_vector=False, 
     cycle_range=None,
     frequencies_to_use=None,
     components_to_use=None,
@@ -20,16 +18,12 @@ def load_and_prepare_data(
     
     X_train, y_train = build_model_input(
         df_train, 
-        frequency_selection=frequency_selection, 
-        include_action_vector=include_action_vector,
         frequencies_to_use=frequencies_to_use,
         components_to_use=components_to_use
     )
     
     X_test, y_test = build_model_input(
         df_test, 
-        frequency_selection=frequency_selection, 
-        include_action_vector=include_action_vector,
         frequencies_to_use=frequencies_to_use,
         components_to_use=components_to_use
     )
