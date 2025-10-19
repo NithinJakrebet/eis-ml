@@ -3,18 +3,13 @@ from feature_engineering.main import build_model_input
 
 def load_and_prepare_data(
     data_folder=None, 
-    cycle_range=None,
     frequencies_to_use=None,
     components_to_use=None,
     method="leave_two_out"
     
 ):
 
-    df_train, df_test = test_train_split(
-        data_folder=data_folder, 
-        cycle_range=cycle_range,
-        method=method
-    )
+    df_train, df_test = test_train_split(data_folder=data_folder, method=method)
     
     X_train, y_train = build_model_input(
         df_train, 

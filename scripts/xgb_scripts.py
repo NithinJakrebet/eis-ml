@@ -1,29 +1,40 @@
 import numpy as np
 import xgboost as xgb
-import config
+from sklearn.model_selection import train_test_split
+
+# Model parameters - simple, effective defaults
+MODEL_PARAMS = {
+    'n_estimators': 500,
+    'max_depth': 6,
+    'learning_rate': 0.05,
+    'subsample': 0.8,
+    'colsample_bytree': 0.8,
+    'reg_lambda': 1.0,
+    'min_child_weight': 1,
+    'objective': 'reg:squarederror',
+    'n_jobs': -1,
+    'random_state': 42,
+    'early_stopping_rounds': 50  # Moved here for older XGBoost versions
+}
+
 
 def train_ensemble_model(X_train, y_train):
-    from sklearn.model_selection import KFold
+    # Split for early stopping validation
+    X_tr, X_val, y_tr, y_val = train_test_split(
+        X_train, y_train, test_size=0.2, random_state=42
+    )
     
-    n_folds = config.NUM_ENSEMBLE
-    kf = KFold(n_splits=n_folds, shuffle=True, random_state=42)
-    ensemble_models = []
+    model = xgb.XGBRegressor(**MODEL_PARAMS)
+    model.fit(
+        X_tr, y_tr,
+        eval_set=[(X_val, y_val)],
+        verbose=False
+    )
     
-    for fold_idx, (train_idx, val_idx) in enumerate(kf.split(X_train)):
-        X_fold_train = X_train[train_idx]
-        y_fold_train = y_train[train_idx]
-        
-        model_params = config.MODEL_PARAMS.copy()
-        model_params['random_state'] = model_params.get('random_state', 42) + fold_idx
-        
-        model = xgb.XGBRegressor(**model_params)
-        model.fit(X_fold_train, y_fold_train)
-        ensemble_models.append(model)
-    
-    return ensemble_models
+    return model
 
-def predict_ensemble(models, X_test):
-    all_predictions = np.array([model.predict(X_test) for model in models])    
-    mean_predictions = np.mean(all_predictions, axis=0)
-    std_predictions = np.std(all_predictions, axis=0)
-    return mean_predictions, std_predictions, all_predictions
+def predict_ensemble(model, X_test):
+    predictions = model.predict(X_test)
+    # Return zeros for std since we don't have an ensemble
+    std_predictions = np.zeros_like(predictions)
+    return predictions, std_predictions, predictions.reshape(1, -1)

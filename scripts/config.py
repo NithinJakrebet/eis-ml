@@ -3,22 +3,19 @@ CHANNELS = ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8']
 TRAIN_CHANNELS = ['A1', 'A2', 'A3', 'A4', 'A5', 'A6']
 TEST_CHANNELS = ['A7', 'A8']
 
-# EIS data filtering parameters
-FREQ_MIN = 0.2
-FREQ_MAX = 20000
-NS_VALUES = [1, 6]
 
-# Model parameters
-MODEL_PARAMS = {
-    'n_estimators': 500,
-    'max_depth': 100,
-    'learning_rate': 0.1,
-    'objective': 'reg:squarederror',
-    'random_state': 42
-}
+unique_frequencies = [
+    2.54e-01, 3.40e-01, 4.56e-01, 6.12e-01, 8.22e-01, 9.99e-01, 1.10e+00, 1.33e+00,
+    1.48e+00, 1.78e+00, 1.99e+00, 2.37e+00, 2.66e+00, 3.16e+00, 3.57e+00, 4.22e+00,
+    4.80e+00, 5.62e+00, 6.43e+00, 7.50e+00, 8.64e+00, 1.00e+01, 1.16e+01, 1.33e+01,
+    1.55e+01, 1.78e+01, 2.09e+01, 2.37e+01, 2.80e+01, 3.16e+01, 3.75e+01, 4.22e+01,
+    5.03e+01, 5.62e+01, 6.76e+01, 7.50e+01, 9.06e+01, 1.02e+02, 1.22e+02, 1.35e+02,
+    1.63e+02, 1.78e+02, 2.19e+02, 2.37e+02, 2.94e+02, 3.16e+02, 3.94e+02, 4.22e+02,
+    5.29e+02, 5.64e+02, 7.10e+02, 7.50e+02, 9.52e+02, 1.00e+03, 1.28e+03, 1.33e+03,
+    1.71e+03, 1.78e+03, 2.30e+03, 2.37e+03, 3.09e+03, 3.16e+03, 4.14e+03, 4.22e+03,
+    5.56e+03, 5.62e+03, 7.45e+03, 7.50e+03, 1.00e+04
+]
 
-# Ensemble parameters (CV folds)
-NUM_ENSEMBLE = 10
 
 # Results configuration
 RESULTS_DIR = "../results"

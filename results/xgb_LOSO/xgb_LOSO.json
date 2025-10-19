@@ -1,0 +1,16 @@
+{
+  "model": "XGBoost Ensemble",
+  "frequency_selection": "unknown",
+  "features": 74,
+  "timestamp": "2025-10-18T16:47:08.297512",
+  "metrics": {
+    "rmse": 190.46525109419892,
+    "r2": 0.9793485695173588,
+    "mse": 36277.01187437624,
+    "mae": 137.3938325106887
+  },
+  "data_info": {
+    "train_samples": 1632,
+    "test_samples": 566
+  }
+}
