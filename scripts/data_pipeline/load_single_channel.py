@@ -5,7 +5,7 @@ def load_single_channel(data_folder, channel, cycle_range=None):
     file_path = os.path.join(data_folder, f"{channel}.csv")
     df = pd.read_csv(file_path).dropna()
 
-    if "#NAME?" in df.columns: df = df.rename(columns={"#NAME?": "Im(Z)/Ohm"})
+    if "#NAME?" in df.columns: df = df.rename(columns={"#NAME?": "-Im(Z)/Ohm"})
 
     # add provenance
     df["channel"] = channel   # <— IMPORTANT

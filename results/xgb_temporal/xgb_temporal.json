@@ -2,15 +2,15 @@
   "model": "XGBoost Ensemble",
   "frequency_selection": "unknown",
   "features": 66,
-  "timestamp": "2025-10-18T18:18:04.607265",
+  "timestamp": "2025-10-20T15:51:33.466865",
   "metrics": {
-    "rmse": 180.14954376617106,
-    "r2": 0.9801748056785081,
-    "mse": 32453.858119159584,
-    "mae": 119.5022785324234
+    "rmse": 110.38094660604408,
+    "r2": 0.9930640355117748,
+    "mse": 12183.953373646353,
+    "mae": 67.50597134445243
   },
   "data_info": {
-    "train_samples": 1754,
-    "test_samples": 444
+    "train_samples": 1632,
+    "test_samples": 566
   }
 }

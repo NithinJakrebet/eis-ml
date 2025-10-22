@@ -35,7 +35,7 @@ def build_state_vector(
             freq_data = sub[sub['freq/Hz'] == freq]
             
             re_val = pd.to_numeric(freq_data['Re(Z)/Ohm'], errors='coerce').values[0]
-            im_val = pd.to_numeric(freq_data['Im(Z)/Ohm'], errors='coerce').values[0]
+            im_val = pd.to_numeric(freq_data['-Im(Z)/Ohm'], errors='coerce').values[0]
             real_z.append(float(re_val) if not np.isnan(re_val) else np.nan)
             imag_z.append(float(im_val) if not np.isnan(im_val) else np.nan)
 
