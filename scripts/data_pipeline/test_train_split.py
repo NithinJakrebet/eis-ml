@@ -7,12 +7,12 @@ import os
 def test_train_split(
     data_folder=None, 
     cycle_range=None,
-    method="leave_two_out"
+    method="LOSO"
 ):
     if data_folder is None: data_folder = "data/04-03-24"
     
     match method:
-        case "leave_two_out": df_train, df_test = leave_two_out(cycle_range, data_folder)
+        case "LOSO": df_train, df_test = loso(cycle_range, data_folder)
         case "bin_and_split": df_train, df_test = bin_and_split(cycle_range, data_folder)
         case "temporal": df_train, df_test = temporal_split(data_folder)
         case _: raise ValueError(f"Unknown split method: {method}")
@@ -49,7 +49,7 @@ def temporal_split(data_folder):
 
             
             
-def leave_two_out(cycle_range, data_folder):
+def loso(cycle_range, data_folder):
     # leave 2 out method
     train_channels = config.TRAIN_CHANNELS
     test_channels = config.TEST_CHANNELS
