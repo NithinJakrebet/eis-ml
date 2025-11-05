@@ -1,9 +1,30 @@
+# Virtual environments
 venv/
+venv_py311/
+env/
+.venv/
+
+# OS files
 .DS_Store
 
-
+# Python cache
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
 
-venv_py311/
+# MLflow artifacts
+mlruns/
+mlartifacts/
+temp_prediction*.png
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# IDE settings
+.vscode/
+.idea/
+
+# Model files (optional - uncomment if models shouldn't be versioned)
+models/*.pkl
+data/

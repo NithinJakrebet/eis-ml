@@ -1,20 +1,19 @@
 import matplotlib.pyplot as plt
-plt.style.use("paper.mplstyle")
-
 
 
 import pandas as pd
 import numpy as np
 
-def degradation(df: pd.DataFrame):
-    capacity = df['Capacity/mA.h']
+def degradation(channel, df: pd.DataFrame):
+    mask = df['Ns'] == 6
+    capacity = df['Capacity/mA.h'].where(mask)
     cycle_number = df['cycle number']
     
     plt.figure(figsize=(8, 8))
     plt.scatter(cycle_number, capacity, alpha=0.6)
     plt.xlabel('Cycle Number')
     plt.ylabel('Capacity (mA.h)')
-    plt.title('Capacity vs. Cycle Number')
+    plt.title(f'{channel}: Capacity vs. Cycle Number')
     plt.show()
 
     
@@ -104,12 +103,12 @@ def unique_frequencies(unique_freqs: np.array):
 def nyquist(df: pd.DataFrame, title_prefix=""):
     # Prepare full dataset values
     Re_Z_full = df['Re(Z)/Ohm'].values
-    Im_Z_full = df['Im(Z)/Ohm'].values
+    Im_Z_full = df['-Im(Z)/Ohm'].values
 
     # Prepare filtered dataset values
     filtered_df = df.loc[(df['Ns'].isin([1, 6])) & (df['cycle number'] != 0)].copy()
     Re_Z_filtered = filtered_df['Re(Z)/Ohm'].values
-    Im_Z_filtered = filtered_df['Im(Z)/Ohm'].values
+    Im_Z_filtered = filtered_df['-Im(Z)/Ohm'].values
 
     # Create subplots: two columns side by side
     fig, axes = plt.subplots(1, 2, figsize=(16, 8))

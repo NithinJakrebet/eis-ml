@@ -51,8 +51,8 @@ def temporal_split(data_folder):
             
 def loso(cycle_range, data_folder):
     # leave 2 out method
-    train_channels = config.TRAIN_CHANNELS
-    test_channels = config.TEST_CHANNELS
+    train_channels = ['A1','A2','A3','A4','A5','A6','A7']
+    test_channels = ['A8']
     train_channels_data = {}
     test_channels_data = {}
     for channel in train_channels: train_channels_data[channel] = load_single_channel(data_folder, channel, cycle_range)    
