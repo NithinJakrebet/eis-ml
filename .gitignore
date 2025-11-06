@@ -1,9 +1,3 @@
-# Virtual environments
-venv/
-venv_py311/
-env/
-.venv/
-
 # OS files
 .DS_Store
 
@@ -26,5 +20,7 @@ temp_prediction*.png
 .idea/
 
 # Model files (optional - uncomment if models shouldn't be versioned)
-models/*.pkl
+models/
 data/
+notebooks/
+results/plots
