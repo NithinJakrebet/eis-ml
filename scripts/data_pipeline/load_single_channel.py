@@ -8,7 +8,7 @@ def load_single_channel(data_folder, channel, cycle_range=None):
     if "#NAME?" in df.columns: df = df.rename(columns={"#NAME?": "-Im(Z)/Ohm"})
 
     # add provenance
-    df["channel"] = channel   # <— IMPORTANT
+    df["channel"] = channel 
 
     if cycle_range is not None:
         lo, hi = cycle_range

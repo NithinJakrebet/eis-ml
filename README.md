@@ -1,128 +1,100 @@
-# EIS 
+# EIS-ML: Battery Capacity Prediction using Impedance Spectroscopy
 
-This repository contains a machine learning framework for analyzing battery performance using Electrochemical Impedance Spectroscopy (EIS) data. It includes data processing scripts, model training and evaluation code, and Jupyter notebooks for exploratory analysis.       
+Machine learning framework for predicting battery degradation from Electrochemical Impedance Spectroscopy (EIS) measurements.
 
-## Getting Started
+## Quick Start
 
-### Clone the Repository
+### Environment Setup
 
-1. **Open Visual Studio Code.**
-2. **Open the Integrated Terminal** by pressing <kbd>Ctrl</kbd>+<kbd>`</kbd> (or via the menu: *View > Terminal*).
-3. **Clone the repository** by running:
-   ```bash
-   git clone https://github.com/NithinJakrebet/eis-ml.git
-   ```
-4. **Navigate into the project directory:**
-   ```bash
-   cd eis-ml
-   ```
+Create and activate a conda environment with Python 3.12:
 
-### Setting Up a Virtual Environment and Installing Dependencies
-
-It is recommended to use a virtual environment to manage the Python dependencies.
-
-1. **Create a virtual environment** (requires Python 3.x):
-   ```bash
-   python3 -m venv venv
-   ```
-2. **Activate the virtual environment:**
-   - **On Windows:**
-     ```bash
-     venv\Scripts\activate
-     ```
-   - **On macOS and Linux:**
-     ```bash
-     source venv/bin/activate
-     ```
-3. **Upgrade pip (optional but recommended):**
-   ```bash
-   pip install --upgrade pip
-   ```
-4. **Install the required packages:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-## Directory Structure
-
-Below is an overview of the repository structure and a brief explanation of each folder:
-
-```
-your-repo/
-│
-├── data/                # Contains EIS data files.
-│
-├── models/              # Directory for saving and loading trained model files.
-│
-├── notebooks/           # Jupyter notebooks for exploratory analysis, model training, and evaluation.
-│
-├── results/             # Holds the outputs such as evaluation logs, plots, and performance metrics.
-│
-├── scripts/             # Python scripts for data preprocessing, model training, and evaluation.
-│
-├── requirements.txt     # List of Python dependencies.
-└── README.md            # This file.
+```bash
+conda create -n eis-ml-conda python=3.12
+conda activate eis-ml-conda
+pip install -r requirements.txt
 ```
 
-# Raw Data Information (Hardware Team)
+### Data Setup
 
-## Li_lowC_lowT_25C (03/22/24)
+ [[Download the dataset](https://drive.google.com/file/d/1i_gVwB42Fy-0QfePR-4tiKbuPbK_UTJ1/view?usp=drive_link)] and extract into the `data/` directory.
 
-* **Cells**: 8 (B1–B8)
-* **Cycles**: ~150
-* **Protocol**: Low C-rate
-* **Temperature**: B1–B4 (Low T), B5–B8 (25 °C)
-* **EIS**: Yes
-* **Notes**: Baseline low-rate dataset for comparing temperature effects on Li-ion cycling.
-
-## Li_highC_25C (04/03/24)
-
-* **Cells**: 8 (A1–A8)
-* **Cycles**: ~265
-* **Protocol**: High C-rate
-* **Temperature**: 25 °C
-* **EIS**: Yes
-* **Failures**: All channels except A3 and A6 reached end of life.
-
-## Li_2C-3.75C_25C_precycled (06/10/24)
-
-* **Cells**: 8 (A1–A8)
-* **Chemistry**: Li-ion (Molicell 21700 P42A, NMC)
-* **Protocol**: 2C charge / 3.75C discharge
-* **EIS**: Every 10 cycles
-* **Temperature**: 25 °C
-* **Equipment**: BCS-815 (SN 1054), BT-Lab v1.79
-* **Notes**: Precycled cells; occasional impedance spikes; suitable for EIS-based degradation modeling.
-
-## Na_1.3C-3C_25C_noEIS_fastcycle (06/18/24)
-
-* **Cells**: 2 (A1–A2)
-* **Chemistry**: Na-ion 18650
-* **Protocol**: 1.3C charge / 3C discharge until failure
-* **EIS**: None (continuous cycling only)
-* **Temperature**: 25 °C
-* **Equipment**: BCS-815 (SN 1054), BT-Lab v1.79
-* **Notes**: Uses `fastcyclewithoutEISnaion.mps`; fast-degradation Na-ion test; no impedance data for modeling (use for capacity-fade comparison only).
+Expected structure:
+```
+data/
+├── Li_highC_25C/
+│   ├── A1.csv
+│   ├── A2.csv
+│   └── ...
+└── [other datasets]/
+```
 
 
-# EIS-ML Project Overview
+## Workflow
 
-## Development Approach
-- **Structured code → Python scripts** (`scripts/` folder)
-- **Exploration & EDA → Jupyter notebooks** (`notebooks/` folder)
+### Notebooks vs Scripts
 
-## Data Structure
+- **Notebooks** (`notebooks/`): For experimentation, prototyping, and interactive analysis. Not tracked in Git to avoid merge conflicts.
+- **Scripts** (`scripts/`): Production-ready, reusable code. Tracked in Git for version control and team collaboration.
 
-**Key Data Points:**
-- EIS measurements at `Ns=1` or `Ns=6` (PEIS steps)
-- Frequency range: 0.02Hz - 20kHz ( 69 frequencies)
-- Current data from CC/CV steps for action vectors
+### Configuration-Driven Experiments
 
-## Machine Learning Models
-1. **Gaussian Process Regression (GPR)** with ARD kernels
-2. **XGBoost** (Gradient Boosted Decision Trees)
+Model parameters are defined in YAML files (`configs/`) for easy modification without changing code.
 
-## Regression Task
-Learn mapping: `Qn = f(sn, an)` where:
-- `sn` = battery state (EIS impedance)
-- `Qn` = resulting capacity
+Example workflow:
+1. Edit parameters in `configs/gpr.yaml`
+2. Run experiment notebook (e.g., `GPR_LOSO.ipynb`)
+3. View results in MLflow UI
+4. Commit config changes and result summaries to Git
+
+## Experiment Tracking with MLflow
+
+MLflow tracks experiments locally without requiring a shared server.
+
+### Starting MLflow UI
+
+```bash
+conda activate eis-ml-conda
+mlflow ui
+```
+
+Open http://127.0.0.1:5000 in your browser to view:
+- Experiment runs with parameters and metrics
+- Model performance plots
+- ARD kernel analysis
+- Cross-validation results
+
+### Sharing Results
+
+Since MLflow database (`mlruns/`) is not tracked in Git, share experiments by:
+1. Saving key metrics/plots to `results/summaries/` (JSON/CSV)
+2. Committing these lightweight files to Git
+3. Team members can reproduce experiments using same configs
+
+## Git Version Control
+
+Files tracked in this repository:
+- Production code (`scripts/`)
+- Experiment configurations (`configs/`)
+- Result summaries (`results/summaries/`)
+- Documentation (`README.md`, `requirements.txt`)
+
+Files excluded (see `.gitignore`):
+- Raw data (`data/`)
+- Trained models (`models/`)
+- MLflow artifacts (`mlruns/`)
+- Notebooks (`notebooks/`)
+- Plot files (`results/plots/`)
+- Virtual environments
+
+This keeps the repository focused on code and configurations while avoiding large binary files.
+
+## Contributing
+
+For team members:
+1. Clone the repository
+2. Create conda environment and install dependencies
+3. Download data from [LINK_TO_DATA]
+4. Edit YAML configs for your experiments
+5. Run notebooks or scripts
+6. View results in MLflow UI
+7. Commit config changes and summary files to Git

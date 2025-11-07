@@ -1,21 +1,38 @@
 import matplotlib.pyplot as plt
 
-
+from scipy.stats import pearsonr
+from sklearn.metrics import r2_score
 import pandas as pd
 import numpy as np
 
 def degradation(channel, df: pd.DataFrame):
-    mask = df['Ns'] == 6
-    capacity = df['Capacity/mA.h'].where(mask)
-    cycle_number = df['cycle number']
-    
+    # --- Ns = 6 data (baseline)
+    ns6 = df[df['Ns'] == 6]
+    cap6 = ns6.groupby('cycle number')['Capacity/mA.h'].last()
+
+    # --- Ns = 8 data (aggregated per cycle)
+    ns8 = df[df['Ns'] == 8]
+    cap8 = ns8.groupby('cycle number')['Capacity/mA.h'].last()
+
+    # --- Align both on shared cycle numbers
+    common_cycles = cap6.index.intersection(cap8.index)
+    c6 = cap6.loc[common_cycles]
+    c8 = cap8.loc[common_cycles]
+
+    # --- Compute correlation metrics
+    pearson_r, _ = pearsonr(c6, c8)
+    r2 = r2_score(c6, c8)
+
+    # --- Plot
     plt.figure(figsize=(8, 8))
-    plt.scatter(cycle_number, capacity, alpha=0.6)
+    plt.scatter(c6.index, c6.values, label='Ns = 6', alpha=0.7)
+    plt.scatter(c8.index, c8.values, label='Ns = 8 (aggregated)', alpha=0.7)
     plt.xlabel('Cycle Number')
     plt.ylabel('Capacity (mA.h)')
-    plt.title(f'{channel}: Capacity vs. Cycle Number')
+    plt.title(f'{channel}: Capacity vs. Cycle Number\n'
+              f'Pearson r = {pearson_r:.4f}, R² = {r2:.4f}')
+    plt.legend()
     plt.show()
-
     
     
     
@@ -224,4 +241,47 @@ def residual_analysis_plots(residuals, cycle_numbers, y_pred_mean):
 
     plt.tight_layout()
     return fig
+
+
+def multicell_loso_predictions(cell_metrics, title="LOSO Cross-Validation", figsize=(12, 10)):
+    """
+    Plot predictions from multiple cells on a single scatter plot.
+    
+    Args:
+        cell_metrics: List of tuples (cell_name, y_true, y_pred, r2, rmse, mae)
+        title: Plot title
+        figsize: Figure size tuple
+        
+    Returns:
+        fig, ax: Matplotlib figure and axes objects
+    """
+    fig, ax = plt.subplots(figsize=figsize)
+    colors = plt.cm.tab10(np.linspace(0, 1, len(cell_metrics)))
+    
+    min_val, max_val = float('inf'), float('-inf')
+    
+    for i, (cell_name, y_true, y_pred, r2, rmse, mae) in enumerate(cell_metrics):
+        min_val = min(min_val, y_true.min(), y_pred.min())
+        max_val = max(max_val, y_true.max(), y_pred.max())
+        
+        ax.scatter(y_true, y_pred, alpha=0.7, s=40, color=colors[i], 
+                   label=f'{cell_name} (R²={r2:.3f})', edgecolors='white', linewidth=0.5)
+    
+    ax.plot([min_val, max_val], [min_val, max_val], 'k--', lw=3, alpha=0.8, label='Perfect Prediction')
+    
+    ax.set_xlabel('Actual Capacity', fontsize=14)
+    ax.set_ylabel('Predicted Capacity', fontsize=14)
+    ax.set_title(title, fontsize=16)
+    ax.grid(True, alpha=0.3)
+    ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=10)
+    ax.set_aspect('equal', adjustable='box')
+    
+    avg_r2 = np.mean([r2 for _, _, _, r2, _, _ in cell_metrics])
+    avg_rmse = np.mean([rmse for _, _, _, _, rmse, _ in cell_metrics])
+    stats_text = f'Average R² = {avg_r2:.3f}\nAverage RMSE = {avg_rmse:.4f}'
+    ax.text(0.02, 0.98, stats_text, transform=ax.transAxes, fontsize=12,
+            verticalalignment='top', bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.8))
+    
+    plt.tight_layout()
+    return fig, ax
 

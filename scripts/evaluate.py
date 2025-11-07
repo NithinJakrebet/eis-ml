@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 import os
 from plots import residual_analysis_plots
-import config
 
 def evaluate_model(y_true, y_pred):
     mse = mean_squared_error(y_true, y_pred)
@@ -15,7 +14,7 @@ def evaluate_model(y_true, y_pred):
     return [rmse, r2, mse, mae]
 
 def save_results(filename, X_train, X_test, metrics, model_info, fig=None):
-    experiment_dir = os.path.join(config.RESULTS_DIR, filename)
+    experiment_dir = os.path.join("../results", filename)
     os.makedirs(experiment_dir, exist_ok=True)
     
     plot_path = os.path.join(experiment_dir, f'{filename}.png')
@@ -43,7 +42,7 @@ def save_results(filename, X_train, X_test, metrics, model_info, fig=None):
     with open(json_path, 'w') as f: json.dump(results, f, indent=2)
 
 def save_residual_analysis(filename, residuals, cycle_numbers, y_pred_mean):
-    experiment_dir = os.path.join(config.RESULTS_DIR, filename)
+    experiment_dir = os.path.join("../results", filename)
     os.makedirs(experiment_dir, exist_ok=True)
     
     fig = residual_analysis_plots(residuals, cycle_numbers, y_pred_mean)

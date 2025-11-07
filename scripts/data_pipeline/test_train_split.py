@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 from .load_single_channel import load_single_channel
-import config
 import os
 
 def test_train_split(
@@ -9,16 +8,29 @@ def test_train_split(
     cycle_range=None,
     method="LOSO"
 ):
-    if data_folder is None: data_folder = "data/04-03-24"
+    if data_folder is None: data_folder = "../data/Li_highC_25C"
     
     match method:
-        case "LOSO": df_train, df_test = loso(cycle_range, data_folder)
         case "bin_and_split": df_train, df_test = bin_and_split(cycle_range, data_folder)
         case "temporal": df_train, df_test = temporal_split(data_folder)
         case _: raise ValueError(f"Unknown split method: {method}")
         
     return df_train, df_test
    
+def loso(data_folder, train_channels, test_channel):
+    train_channels_data = {}
+    test_channel_data = {}
+    
+    for channel in train_channels: 
+        train_channels_data[channel] = load_single_channel(data_folder, channel)    
+    for channel in test_channel: 
+        test_channel_data[channel] = load_single_channel(data_folder, channel)
+        
+    train_dfs = list(train_channels_data.values())
+    test_dfs = list(test_channel_data.values())
+
+    return pd.concat(train_dfs, ignore_index=True), pd.concat(test_dfs, ignore_index=True)
+
    
 def temporal_split(data_folder):
     all_channels = [f[:-4] for f in os.listdir(data_folder) if f.endswith('.csv')]
@@ -45,35 +57,13 @@ def temporal_split(data_folder):
         if not test_data.empty: test_dfs.append(test_data)
     
     return pd.concat(train_dfs, ignore_index=True), pd.concat(test_dfs, ignore_index=True)
-
-
-            
-            
-def loso(cycle_range, data_folder):
-    # leave 2 out method
-    train_channels = ['A1','A2','A3','A4','A5','A6','A7']
-    test_channels = ['A8']
-    train_channels_data = {}
-    test_channels_data = {}
-    for channel in train_channels: train_channels_data[channel] = load_single_channel(data_folder, channel, cycle_range)    
-    for channel in test_channels: test_channels_data[channel] = load_single_channel(data_folder, channel, cycle_range)
-    train_dfs = list(train_channels_data.values())
-    test_dfs = list(test_channels_data.values())
-
-    return pd.concat(train_dfs, ignore_index=True), pd.concat(test_dfs, ignore_index=True)
-
-
    
 
 def bin_and_split(cycle_range, data_folder):
-    all_channels = [
-        f[:-4] for f in os.listdir(data_folder)
-        if f.endswith('.csv')
-    ]
+    all_channels = [f[:-4] for f in os.listdir(data_folder) if f.endswith('.csv')]
     
     all_channels_data = {}
-    for channel in all_channels: 
-        all_channels_data[channel] = load_single_channel(data_folder, channel, cycle_range)
+    for channel in all_channels: all_channels_data[channel] = load_single_channel(data_folder, channel, cycle_range)
     
     train_dfs = []
     test_dfs = []

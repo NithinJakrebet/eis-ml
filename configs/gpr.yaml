@@ -1,0 +1,44 @@
+# GPR Model Configurations
+gpr_full_spectrum:
+  data_folder: "/Users/nithin.jakrebet/Desktop/eis-ml/data/Li_highC_25C"
+  cv_method: "LOSO"
+  features: "all_frequencies"
+  model_params:
+    subset_size: 300
+    top_k_freqs: null  
+  kernel_params:
+    constant_value: 1.0
+    constant_bounds: [0.01, 100.0]
+    rbf_length_scale_bounds: [0.01, 100.0]
+    white_noise_level: 0.001
+    white_noise_bounds: "fixed"  
+  gpr_params:
+    alpha: 0.0
+    normalize_y: true
+    n_restarts_optimizer: 1
+    random_state: 42
+
+
+
+
+gpr_top5_freq:
+  data_folder: "/Users/nithin.jakrebet/Desktop/eis-ml/data/Li_highC_25C"
+  cv_method: "LOSO"
+  features: "top5"
+  
+  model_params:
+    subset_size: 500
+    top_k_freqs: 5  # Select top 5 frequencies via ARD
+  
+  kernel_params:
+    constant_value: 1.0
+    constant_bounds: [0.01, 100.0]
+    rbf_length_scale_bounds: [0.01, 100.0]
+    white_noise_level: 0.001
+    white_noise_bounds: "fixed"
+  
+  gpr_params:
+    alpha: 0.0
+    normalize_y: true
+    n_restarts_optimizer: 1
+    random_state: 42
