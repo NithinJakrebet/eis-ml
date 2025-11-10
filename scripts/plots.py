@@ -1,86 +1,29 @@
 import matplotlib.pyplot as plt
-from scipy.stats import pearsonr
-from sklearn.metrics import r2_score
 import pandas as pd
 import numpy as np
 
 def degradation(channel, df: pd.DataFrame):
-    ns6 = df[df['Ns'] == 6]
-    cap6 = ns6.groupby('cycle number')['Capacity/mA.h'].mean()
-
     ns8 = df[df['Ns'] == 8]
-    cap8 = ns8.groupby('cycle number')['Capacity/mA.h'].last()
+    if ns8.empty:
+        raise ValueError(f"No rows with Ns == 8 found for channel {channel}")
 
-    common_cycles = cap6.index.intersection(cap8.index)
-    c6 = cap6.loc[common_cycles]
-    c8 = cap8.loc[common_cycles]
+    cap8 = ns8.groupby('cycle number')['Capacity/mA.h'].last().sort_index()
 
-    pearson_r, _ = pearsonr(c6, c8)
-    r2 = r2_score(c6, c8)
-
-    plt.figure(figsize=(8, 8))
-    plt.scatter(c6.index, c6.values, label='Ns = 6', alpha=0.7)
-    plt.scatter(c8.index, c8.values, label='Ns = 8 (aggregated)', alpha=0.7)
-    plt.xlabel('Cycle Number')
-    plt.ylabel('Capacity (mA.h)')
-    plt.title(f'{channel}: Capacity vs. Cycle Number\n'
-              f'Pearson r = {pearson_r:.4f}, R² = {r2:.4f}')
-    plt.legend()
+    fig, ax = plt.subplots(figsize=(8, 6))
+    ax.plot(cap8.index, cap8.values, 'o', markersize=5, alpha=0.9, label='Ns = 8')
+    ax.set_xlabel('Cycle Number')
+    ax.set_ylabel('Capacity (mA.h)')
+    ax.set_title(f'{channel}: Ns = 8 Capacity vs Cycle Number')
+    ax.grid(True, alpha=0.3)
+    ax.legend()
+    plt.tight_layout()
     plt.show()
-    
-    
-    
-    
-    
-# def gpr_weights(w):
-#     # Suppose you know your frequencies (33 values)
-#     freqs = np.array([0.999, 1.33, 1.78, 2.37, 3.16, 4.22, 5.62, 7.5, 
-#                       10.0, 13.3, 17.8, 23.7, 31.6, 42.2, 56.2, 75.0, 
-#                       102.0, 135.0, 178.0, 237.0, 316.0, 422.0, 564.0, 750.0, 
-#                       1000.0, 1330.0, 1780.0, 2370.0, 3160.0, 4220.0, 5620.0, 7500.0, 
-#                       10000.0])
 
-#     # Split weights into Re and Im components
-#     w_re = w[:len(freqs)]
-#     w_im = w[len(freqs):]
-
-#     # Normalize for visual comparison
-#     w_re /= np.max(w_re)
-#     w_im /= np.max(w_im)
-
-#     plt.figure(figsize=(9,5))
-#     plt.semilogx(freqs, w_re, 'o-', label='Re(Z) weights')
-#     plt.semilogx(freqs, w_im, 's--', label='-Im(Z) weights')
-#     plt.xlabel('Frequency (Hz)')
-#     plt.ylabel('Relative importance weight (exp(-ℓ))')
-#     plt.title('ARD Frequency Importance (Zhang-style)')
-#     plt.legend()
-#     plt.grid(True, which='both', ls='--', alpha=0.6)
-#     plt.tight_layout()
-#     plt.show()
-
-#     # Optionally print top 5 frequencies by mean weight
-#     w_mean = (w_re + w_im) / 2
-#     top_idx = np.argsort(w_mean)[::-1][:5]
-#     print("Top 5 most relevant frequencies (Hz):", freqs[top_idx])
-#     print("Corresponding weights:", w_mean[top_idx])
+    return fig
+    
+    
     
 def ard_summary(freqs_hz_ns_1, freqs_hz_ns_6, re_mean, re_std, im_mean, im_std, save_path=None):
-    """
-    Plot ARD frequency importance for dual Ns state vector with frequency labels.
-    
-    Args:
-        freqs_hz_ns_1: List of frequencies for Ns=1 (discharged state)
-        freqs_hz_ns_6: List of frequencies for Ns=6 (charged state)
-        re_mean: Mean ARD weights for Re(Z) - concatenated [Ns1, Ns6]
-        re_std: Std ARD weights for Re(Z) - concatenated [Ns1, Ns6]
-        im_mean: Mean ARD weights for Im(Z) - concatenated [Ns1, Ns6]
-        im_std: Std ARD weights for Im(Z) - concatenated [Ns1, Ns6]
-        save_path: Optional path to save the figure
-        
-    Returns:
-        fig: Matplotlib figure object
-    """
     fig, ax = plt.subplots(figsize=(16, 8))
     
     ns1_idx = list(range(len(freqs_hz_ns_1)))
@@ -195,39 +138,22 @@ def unique_frequencies(unique_freqs: np.array):
 
       
 def nyquist(df: pd.DataFrame, title_prefix=""):
-    # Prepare full dataset values
-    Re_Z_full = df['Re(Z)/Ohm'].values
-    Im_Z_full = df['-Im(Z)/Ohm'].values
+    Re_Z_full = np.asarray(df["Re(Z)/Ohm"].astype(float).values)
+    Im_Z_full = np.asarray(df["-Im(Z)/Ohm"].astype(float).values)
 
-    # Prepare filtered dataset values
-    filtered_df = df.loc[(df['Ns'].isin([1, 6])) & (df['cycle number'] != 0)].copy()
-    Re_Z_filtered = filtered_df['Re(Z)/Ohm'].values
-    Im_Z_filtered = filtered_df['-Im(Z)/Ohm'].values
+    fig, ax = plt.subplots(figsize=(6, 6))
 
-    # Create subplots: two columns side by side
-    fig, axes = plt.subplots(1, 2, figsize=(16, 8))
-
-    # Plot full dataset Nyquist plot on the first subplot
-    axes[0].plot(Re_Z_full, Im_Z_full, 'o', markersize=5, alpha=0.7, label="Impedance Data")
-    axes[0].set_xlabel('Re(Z) / Ohm')
-    axes[0].set_ylabel('Im(Z) / Ohm')
-    axes[0].set_title(f'{title_prefix} Nyquist Plot of Battery Impedance')
-    axes[0].grid(True)
-    axes[0].axis('equal')
-    axes[0].legend()
-
-    # Plot filtered dataset Nyquist plot on the second subplot
-    axes[1].plot(Re_Z_filtered, Im_Z_filtered, 'o', markersize=5, alpha=0.7, label="Impedance Data")
-    axes[1].set_xlabel('Re(Z) / Ohm')
-    axes[1].set_ylabel('Im(Z) / Ohm')
-    axes[1].set_title(f'{title_prefix} Nyquist Plot of Battery Impedance (EIS States)')
-    axes[1].grid(True)
-    axes[1].axis('equal')
-    axes[1].legend()
-
-    # Adjust layout to prevent overlap
+    ax.scatter(Re_Z_full, Im_Z_full, s=30, alpha=0.75)
+    ax.set_xlabel('Re(Z) / Ohm')
+    ax.set_ylabel('-Im(Z) / Ohm')
+    ax.set_title(f'{title_prefix} Nyquist Plot of Battery Impedance' if title_prefix else 'Nyquist Plot of Battery Impedance')
+    ax.grid(True, linestyle='--', alpha=0.5)
+    ax.axis('equal')
+    ax.legend()
     plt.tight_layout()
     plt.show()
+
+    return fig, ax
 
 
 def model_predictions(y_true, y_pred_mean, y_pred_std=None, title_prefix="Model"):
