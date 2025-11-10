@@ -32,42 +32,56 @@ def degradation(channel, df: pd.DataFrame):
     
     
     
-def gpr_weights(w):
-    # Suppose you know your frequencies (33 values)
-    freqs = np.array([0.999, 1.33, 1.78, 2.37, 3.16, 4.22, 5.62, 7.5, 
-                      10.0, 13.3, 17.8, 23.7, 31.6, 42.2, 56.2, 75.0, 
-                      102.0, 135.0, 178.0, 237.0, 316.0, 422.0, 564.0, 750.0, 
-                      1000.0, 1330.0, 1780.0, 2370.0, 3160.0, 4220.0, 5620.0, 7500.0, 
-                      10000.0])
+# def gpr_weights(w):
+#     # Suppose you know your frequencies (33 values)
+#     freqs = np.array([0.999, 1.33, 1.78, 2.37, 3.16, 4.22, 5.62, 7.5, 
+#                       10.0, 13.3, 17.8, 23.7, 31.6, 42.2, 56.2, 75.0, 
+#                       102.0, 135.0, 178.0, 237.0, 316.0, 422.0, 564.0, 750.0, 
+#                       1000.0, 1330.0, 1780.0, 2370.0, 3160.0, 4220.0, 5620.0, 7500.0, 
+#                       10000.0])
 
-    # Split weights into Re and Im components
-    w_re = w[:len(freqs)]
-    w_im = w[len(freqs):]
+#     # Split weights into Re and Im components
+#     w_re = w[:len(freqs)]
+#     w_im = w[len(freqs):]
 
-    # Normalize for visual comparison
-    w_re /= np.max(w_re)
-    w_im /= np.max(w_im)
+#     # Normalize for visual comparison
+#     w_re /= np.max(w_re)
+#     w_im /= np.max(w_im)
 
-    plt.figure(figsize=(9,5))
-    plt.semilogx(freqs, w_re, 'o-', label='Re(Z) weights')
-    plt.semilogx(freqs, w_im, 's--', label='-Im(Z) weights')
-    plt.xlabel('Frequency (Hz)')
-    plt.ylabel('Relative importance weight (exp(-ℓ))')
-    plt.title('ARD Frequency Importance (Zhang-style)')
-    plt.legend()
-    plt.grid(True, which='both', ls='--', alpha=0.6)
-    plt.tight_layout()
-    plt.show()
+#     plt.figure(figsize=(9,5))
+#     plt.semilogx(freqs, w_re, 'o-', label='Re(Z) weights')
+#     plt.semilogx(freqs, w_im, 's--', label='-Im(Z) weights')
+#     plt.xlabel('Frequency (Hz)')
+#     plt.ylabel('Relative importance weight (exp(-ℓ))')
+#     plt.title('ARD Frequency Importance (Zhang-style)')
+#     plt.legend()
+#     plt.grid(True, which='both', ls='--', alpha=0.6)
+#     plt.tight_layout()
+#     plt.show()
 
-    # Optionally print top 5 frequencies by mean weight
-    w_mean = (w_re + w_im) / 2
-    top_idx = np.argsort(w_mean)[::-1][:5]
-    print("Top 5 most relevant frequencies (Hz):", freqs[top_idx])
-    print("Corresponding weights:", w_mean[top_idx])
+#     # Optionally print top 5 frequencies by mean weight
+#     w_mean = (w_re + w_im) / 2
+#     top_idx = np.argsort(w_mean)[::-1][:5]
+#     print("Top 5 most relevant frequencies (Hz):", freqs[top_idx])
+#     print("Corresponding weights:", w_mean[top_idx])
     
 def ard_summary(freqs_hz_ns_1, freqs_hz_ns_6, re_mean, re_std, im_mean, im_std, save_path=None):
-
-    fig, ax = plt.subplots(figsize=(12, 6))
+    """
+    Plot ARD frequency importance for dual Ns state vector with frequency labels.
+    
+    Args:
+        freqs_hz_ns_1: List of frequencies for Ns=1 (discharged state)
+        freqs_hz_ns_6: List of frequencies for Ns=6 (charged state)
+        re_mean: Mean ARD weights for Re(Z) - concatenated [Ns1, Ns6]
+        re_std: Std ARD weights for Re(Z) - concatenated [Ns1, Ns6]
+        im_mean: Mean ARD weights for Im(Z) - concatenated [Ns1, Ns6]
+        im_std: Std ARD weights for Im(Z) - concatenated [Ns1, Ns6]
+        save_path: Optional path to save the figure
+        
+    Returns:
+        fig: Matplotlib figure object
+    """
+    fig, ax = plt.subplots(figsize=(16, 8))
     
     ns1_idx = list(range(len(freqs_hz_ns_1)))
     ns6_idx = list(range(len(freqs_hz_ns_1), len(freqs_hz_ns_1) + len(freqs_hz_ns_6)))
@@ -100,6 +114,43 @@ def ard_summary(freqs_hz_ns_1, freqs_hz_ns_6, re_mean, re_std, im_mean, im_std, 
                      (im_mean + im_std)[ns6_idx], 
                      alpha=0.2, color='orange')
     
+    # Add frequency labels for each point
+    # Label Ns1 frequencies
+    for i, freq in enumerate(freqs_hz_ns_1):
+        # Get the max height at this frequency (from all 4 curves)
+        y_max = max(
+            re_mean[ns1_idx[i]] + re_std[ns1_idx[i]],
+            im_mean[ns1_idx[i]] + im_std[ns1_idx[i]]
+        )
+        # Format frequency label
+        if freq < 1:
+            label = f'{freq:.2f}'
+        elif freq < 100:
+            label = f'{freq:.1f}'
+        else:
+            label = f'{int(freq)}'
+        
+        ax.text(freq, y_max, label, fontsize=7, ha='center', va='bottom', 
+                rotation=45, color='darkblue')
+    
+    # Label Ns6 frequencies
+    for i, freq in enumerate(freqs_hz_ns_6):
+        # Get the max height at this frequency
+        y_max = max(
+            re_mean[ns6_idx[i]] + re_std[ns6_idx[i]],
+            im_mean[ns6_idx[i]] + im_std[ns6_idx[i]]
+        )
+        # Format frequency label
+        if freq < 1:
+            label = f'{freq:.2f}'
+        elif freq < 100:
+            label = f'{freq:.1f}'
+        else:
+            label = f'{int(freq)}'
+        
+        ax.text(freq, y_max, label, fontsize=7, ha='center', va='bottom', 
+                rotation=45, color='darkred')
+    
     ax.set_xlabel("Frequency (Hz)", fontsize=12)
     ax.set_ylabel("Relative importance (exp(-ℓ))", fontsize=12)
     ax.set_title("ARD Frequency Importance: Dual Ns State Vector (Ns1=Discharged, Ns6=Charged)\n14-Fold LOSO Cross-Validation", 
@@ -109,7 +160,7 @@ def ard_summary(freqs_hz_ns_1, freqs_hz_ns_6, re_mean, re_std, im_mean, im_std, 
     plt.tight_layout()
     
     if save_path:
-        fig.savefig(save_path, dpi=180)
+        fig.savefig(save_path, dpi=180, bbox_inches='tight')
     
     return fig
     

@@ -1,13 +1,3 @@
-"""
-LOSO (Leave-One-Subject-Out) Cross-Validation Experiment Runner
-
-This script runs LOSO cross-validation experiments using configurations from gpr.yaml.
-Each cell is used once as test set while all other cells form the training set.
-
-Usage:
-    python run_loso_experiment.py PEIS-HC-RT_LOSO
-"""
-
 import sys
 import yaml
 import argparse
