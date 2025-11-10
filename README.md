@@ -18,9 +18,6 @@ pip install -r requirements.txt
 
  [[Download the dataset](https://drive.google.com/file/d/1oxKcQ_CtknQq9hlbonAoCJDUV-l3i-30/view?usp=share_link)] and extract into the `data/` directory.
 
-
-
-
 ## Workflow
 
 ### Notebooks vs Scripts
@@ -79,14 +76,3 @@ Files excluded (see `.gitignore`):
 - Virtual environments
 
 This keeps the repository focused on code and configurations while avoiding large binary files.
-
-## Contributing
-
-For team members:
-1. Clone the repository
-2. Create conda environment and install dependencies
-3. Download data from [LINK_TO_DATA]
-4. Edit YAML configs for your experiments
-5. Run notebooks or scripts
-6. View results in MLflow UI
-7. Commit config changes and summary files to Git
