@@ -16,17 +16,9 @@ pip install -r requirements.txt
 
 ### Data Setup
 
- [[Download the dataset](https://drive.google.com/file/d/1i_gVwB42Fy-0QfePR-4tiKbuPbK_UTJ1/view?usp=drive_link)] and extract into the `data/` directory.
+ [[Download the dataset](https://drive.google.com/file/d/1oxKcQ_CtknQq9hlbonAoCJDUV-l3i-30/view?usp=share_link)] and extract into the `data/` directory.
 
-Expected structure:
-```
-data/
-├── Li_highC_25C/
-│   ├── A1.csv
-│   ├── A2.csv
-│   └── ...
-└── [other datasets]/
-```
+
 
 
 ## Workflow
