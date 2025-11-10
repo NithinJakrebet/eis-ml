@@ -1,29 +1,23 @@
 import matplotlib.pyplot as plt
-
 from scipy.stats import pearsonr
 from sklearn.metrics import r2_score
 import pandas as pd
 import numpy as np
 
 def degradation(channel, df: pd.DataFrame):
-    # --- Ns = 6 data (baseline)
     ns6 = df[df['Ns'] == 6]
-    cap6 = ns6.groupby('cycle number')['Capacity/mA.h'].last()
+    cap6 = ns6.groupby('cycle number')['Capacity/mA.h'].mean()
 
-    # --- Ns = 8 data (aggregated per cycle)
     ns8 = df[df['Ns'] == 8]
     cap8 = ns8.groupby('cycle number')['Capacity/mA.h'].last()
 
-    # --- Align both on shared cycle numbers
     common_cycles = cap6.index.intersection(cap8.index)
     c6 = cap6.loc[common_cycles]
     c8 = cap8.loc[common_cycles]
 
-    # --- Compute correlation metrics
     pearson_r, _ = pearsonr(c6, c8)
     r2 = r2_score(c6, c8)
 
-    # --- Plot
     plt.figure(figsize=(8, 8))
     plt.scatter(c6.index, c6.values, label='Ns = 6', alpha=0.7)
     plt.scatter(c8.index, c8.values, label='Ns = 8 (aggregated)', alpha=0.7)
@@ -71,21 +65,53 @@ def gpr_weights(w):
     print("Top 5 most relevant frequencies (Hz):", freqs[top_idx])
     print("Corresponding weights:", w_mean[top_idx])
     
-def ard_summary(freqs_hz, re_mean, re_std, im_mean, im_std, avg_mean):
-    plt.figure(figsize=(10,5))
-    plt.semilogx(freqs_hz, re_mean, 'o-', label='Re(Z) mean')
-    plt.fill_between(freqs_hz, re_mean-re_std, re_mean+re_std, alpha=0.2)
-    plt.semilogx(freqs_hz, im_mean, 's--', label='-Im(Z) mean')
-    plt.fill_between(freqs_hz, im_mean-im_std, im_mean+im_std, alpha=0.2)
-    plt.semilogx(freqs_hz, avg_mean, '-', linewidth=2, label='Avg(Re,Im) mean')
-    plt.xlabel("Frequency (Hz)"); plt.ylabel("Relative importance (exp(-ℓ))")
-    plt.title("ARD frequency importance across 8 LOSO folds")
-    plt.grid(True, which='both', ls='--', alpha=0.4)
-    plt.legend()
-    plt.tight_layout()
-    plt.show()
+def ard_summary(freqs_hz_ns_1, freqs_hz_ns_6, re_mean, re_std, im_mean, im_std, save_path=None):
+
+    fig, ax = plt.subplots(figsize=(12, 6))
     
-    return plt
+    ns1_idx = list(range(len(freqs_hz_ns_1)))
+    ns6_idx = list(range(len(freqs_hz_ns_1), len(freqs_hz_ns_1) + len(freqs_hz_ns_6)))
+    
+    ax.semilogx(freqs_hz_ns_1, re_mean[ns1_idx], 'o-', color='blue', 
+                label='Re(Z) Ns1 (discharged)', markersize=5)
+    ax.fill_between(freqs_hz_ns_1, 
+                     (re_mean - re_std)[ns1_idx], 
+                     (re_mean + re_std)[ns1_idx], 
+                     alpha=0.2, color='blue')
+    
+    ax.semilogx(freqs_hz_ns_1, im_mean[ns1_idx], 's--', color='cyan', 
+                label='-Im(Z) Ns1 (discharged)', markersize=5)
+    ax.fill_between(freqs_hz_ns_1, 
+                     (im_mean - im_std)[ns1_idx], 
+                     (im_mean + im_std)[ns1_idx], 
+                     alpha=0.2, color='cyan')
+    
+    ax.semilogx(freqs_hz_ns_6, re_mean[ns6_idx], '^-', color='red', 
+                label='Re(Z) Ns6 (charged)', markersize=5)
+    ax.fill_between(freqs_hz_ns_6, 
+                     (re_mean - re_std)[ns6_idx], 
+                     (re_mean + re_std)[ns6_idx], 
+                     alpha=0.2, color='red')
+    
+    ax.semilogx(freqs_hz_ns_6, im_mean[ns6_idx], 'v--', color='orange', 
+                label='-Im(Z) Ns6 (charged)', markersize=5)
+    ax.fill_between(freqs_hz_ns_6, 
+                     (im_mean - im_std)[ns6_idx], 
+                     (im_mean + im_std)[ns6_idx], 
+                     alpha=0.2, color='orange')
+    
+    ax.set_xlabel("Frequency (Hz)", fontsize=12)
+    ax.set_ylabel("Relative importance (exp(-ℓ))", fontsize=12)
+    ax.set_title("ARD Frequency Importance: Dual Ns State Vector (Ns1=Discharged, Ns6=Charged)\n14-Fold LOSO Cross-Validation", 
+                 fontsize=13)
+    ax.grid(True, which='both', ls='--', alpha=0.4)
+    ax.legend(loc='best', fontsize=9)
+    plt.tight_layout()
+    
+    if save_path:
+        fig.savefig(save_path, dpi=180)
+    
+    return fig
     
     
     
@@ -160,6 +186,14 @@ def model_predictions(y_true, y_pred_mean, y_pred_std=None, title_prefix="Model"
       - Residuals vs. True
       - Displays mean predictive uncertainty if provided
     """
+    from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+    
+    # Calculate metrics
+    rmse = np.sqrt(mean_squared_error(y_true, y_pred_mean))
+    r2 = r2_score(y_true, y_pred_mean)
+    mse = mean_squared_error(y_true, y_pred_mean)
+    mae = mean_absolute_error(y_true, y_pred_mean)
+    
     fig = plt.figure(figsize=(15, 5))
     
     # --- 1. Predicted vs. True ---
@@ -193,6 +227,12 @@ def model_predictions(y_true, y_pred_mean, y_pred_std=None, title_prefix="Model"
     plt.legend()
     plt.grid(True)
     
+    # Add metrics text box
+    metrics_text = f'R² = {r2:.4f}\nRMSE = {rmse:.4f}\nMAE = {mae:.4f}\nMSE = {mse:.4f}'
+    plt.text(0.05, 0.95, metrics_text, transform=plt.gca().transAxes, 
+             fontsize=10, verticalalignment='top',
+             bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+    
     # --- 2. Residual plot ---
     residuals = y_true - y_pred_mean
     plt.subplot(1, 3, 2)
@@ -214,7 +254,16 @@ def model_predictions(y_true, y_pred_mean, y_pred_std=None, title_prefix="Model"
 
 
 
-def residual_analysis_plots(residuals, cycle_numbers, y_pred_mean):
+def residual_analysis_plots(residuals, cycle_numbers, y_pred_mean, y_true=None):
+    """
+    Plot residual analysis with optional metrics display.
+    
+    Args:
+        residuals: Residual values (y_true - y_pred)
+        cycle_numbers: Cycle numbers for x-axis
+        y_pred_mean: Predicted values
+        y_true: Optional true values to calculate metrics
+    """
     fig, axes = plt.subplots(1, 3, figsize=(15, 5))
 
     # Plot 1: Residuals vs Cycle Number
@@ -238,23 +287,89 @@ def residual_analysis_plots(residuals, cycle_numbers, y_pred_mean):
     axes[2].set_ylabel('Residuals')
     axes[2].set_title('Sequential Residual Pattern')
     axes[2].grid(True, alpha=0.3)
+    
+    # Add metrics if y_true is provided
+    if y_true is not None:
+        from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+        rmse = np.sqrt(mean_squared_error(y_true, y_pred_mean))
+        r2 = r2_score(y_true, y_pred_mean)
+        mse = mean_squared_error(y_true, y_pred_mean)
+        mae = mean_absolute_error(y_true, y_pred_mean)
+        
+        metrics_text = f'R² = {r2:.4f}\nRMSE = {rmse:.4f}\nMAE = {mae:.4f}\nMSE = {mse:.4f}'
+        axes[0].text(0.05, 0.95, metrics_text, transform=axes[0].transAxes, 
+                     fontsize=9, verticalalignment='top',
+                     bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
 
     plt.tight_layout()
     return fig
 
 
-def multicell_loso_predictions(cell_metrics, title="LOSO Cross-Validation", figsize=(12, 10)):
+def capacity_vs_cycle(y_true, y_pred_mean, cycle_numbers, y_pred_std=None, title_prefix="Model"):
     """
-    Plot predictions from multiple cells on a single scatter plot.
+    Plot actual vs predicted capacity over cycle number with optional confidence interval.
+    Uses line plots with markers for better visualization of degradation trends.
     
     Args:
-        cell_metrics: List of tuples (cell_name, y_true, y_pred, r2, rmse, mae)
-        title: Plot title
-        figsize: Figure size tuple
+        y_true: True capacity values
+        y_pred_mean: Predicted capacity values
+        cycle_numbers: Cycle numbers for x-axis
+        y_pred_std: Optional standard deviation for 95% confidence interval
+        title_prefix: Prefix for plot title
         
     Returns:
-        fig, ax: Matplotlib figure and axes objects
+        fig: Matplotlib figure object
     """
+    from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+    
+    # Calculate metrics
+    rmse = np.sqrt(mean_squared_error(y_true, y_pred_mean))
+    r2 = r2_score(y_true, y_pred_mean)
+    mse = mean_squared_error(y_true, y_pred_mean)
+    mae = mean_absolute_error(y_true, y_pred_mean)
+    
+    fig = plt.figure(figsize=(10, 6))
+    
+    # Sort by cycle number for proper line drawing
+    sorted_idx = np.argsort(cycle_numbers)
+    sorted_cycles = cycle_numbers[sorted_idx]
+    sorted_true = y_true[sorted_idx]
+    sorted_pred = y_pred_mean[sorted_idx]
+    
+    # Plot actual and predicted with line connections
+    plt.plot(sorted_cycles, sorted_true, 'o-', label='Actual', markersize=5)
+    plt.plot(sorted_cycles, sorted_pred, 's--', label='Predicted', markersize=5)
+    
+    # Add 95% confidence interval if standard deviation is provided
+    if y_pred_std is not None:
+        sorted_std = y_pred_std[sorted_idx]
+        plt.fill_between(
+            sorted_cycles,
+            sorted_pred - 1.96 * sorted_std,
+            sorted_pred + 1.96 * sorted_std,
+            alpha=0.2,
+            label='95% CI'
+        )
+    
+    plt.xlabel('Cycle Number')
+    plt.ylabel('Capacity (mA.h)')
+    plt.title(f'{title_prefix}: Capacity vs Cycle Number')
+    plt.legend(loc='best')
+    plt.grid(True, alpha=0.3)
+    
+    # Add metrics text box
+    metrics_text = f'R² = {r2:.4f}\nRMSE = {rmse:.4f}\nMAE = {mae:.4f}\nMSE = {mse:.4f}'
+    plt.text(0.05, 0.05, metrics_text, transform=plt.gca().transAxes, 
+             fontsize=10, verticalalignment='bottom',
+             bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+    
+    plt.tight_layout()
+    
+    return fig
+
+
+
+def multicell_loso_predictions(cell_metrics, title="LOSO Cross-Validation", figsize=(12, 10)):
     fig, ax = plt.subplots(figsize=figsize)
     colors = plt.cm.tab10(np.linspace(0, 1, len(cell_metrics)))
     

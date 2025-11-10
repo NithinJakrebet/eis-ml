@@ -12,7 +12,7 @@ def build_model_input(df, cycle_range=None, freqs=None):
     X = np.array(state_vectors)
     y = []
         
-    capacity_df = df[df['Ns'] == 6]
+    capacity_df = df[df['Ns'] == 8]
     
     # Get initial capacity for each channel (first cycle)
     initial_capacities = {}

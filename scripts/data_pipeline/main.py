@@ -1,5 +1,6 @@
 from .test_train_split import test_train_split
 from feature_engineering.main import build_model_input
+import numpy as np
 
 def load_and_prepare_data(data_folder=None, method="LOSO"):
 
@@ -7,6 +8,9 @@ def load_and_prepare_data(data_folder=None, method="LOSO"):
 
     X_train, y_train = build_model_input(df_train)    
     X_test, y_test = build_model_input(df_test)
+    
+    # Normalize using ONLY training statistics
+    X_train, X_test = normalize_features(X_train, X_test)
 
     print(f"X_train: {X_train.shape}, y_train: {y_train.shape}")
     print(f"X_test: {X_test.shape}, y_test: {y_test.shape}")
@@ -16,3 +20,12 @@ def load_and_prepare_data(data_folder=None, method="LOSO"):
     return X_train, X_test, y_train, y_test
 
 
+def normalize_features(X_train, X_test):
+    mu = np.nanmean(X_train, axis=0)
+    sig = np.nanstd(X_train, axis=0)
+    sig = np.where(sig < 1e-12, 1.0, sig)
+    
+    X_train_norm = (X_train - mu) / sig
+    X_test_norm = (X_test - mu) / sig
+    
+    return X_train_norm, X_test_norm

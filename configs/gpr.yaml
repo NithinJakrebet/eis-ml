@@ -1,44 +1,45 @@
-# GPR Model Configurations
-gpr_full_spectrum:
-  data_folder: "/Users/nithin.jakrebet/Desktop/eis-ml/data/Li_highC_25C"
-  cv_method: "LOSO"
-  features: "all_frequencies"
+PEIS-HC-RT_LOSO:
+  experiment_type: "loso_cross_validation"
+  data_folder: "PEIS-HC-RT"
+  channels:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - A6
+    - A7
+    - A8
+    - B1
+    - B2
+    - B3
+    - B4
+    - B5
+    - B6
+  
   model_params:
     subset_size: 300
-    top_k_freqs: null  
-  kernel_params:
-    constant_value: 1.0
-    constant_bounds: [0.01, 100.0]
-    rbf_length_scale_bounds: [0.01, 100.0]
-    white_noise_level: 0.001
-    white_noise_bounds: "fixed"  
-  gpr_params:
-    alpha: 0.0
-    normalize_y: true
-    n_restarts_optimizer: 1
-    random_state: 42
-
-
-
-
-gpr_top5_freq:
-  data_folder: "/Users/nithin.jakrebet/Desktop/eis-ml/data/Li_highC_25C"
-  cv_method: "LOSO"
-  features: "top5"
-  
-  model_params:
-    subset_size: 500
-    top_k_freqs: 5  # Select top 5 frequencies via ARD
+    top_k_freqs: null
   
   kernel_params:
     constant_value: 1.0
     constant_bounds: [0.01, 100.0]
     rbf_length_scale_bounds: [0.01, 100.0]
     white_noise_level: 0.001
-    white_noise_bounds: "fixed"
+    white_noise_bounds: 'fixed'
   
   gpr_params:
     alpha: 0.0
     normalize_y: true
     n_restarts_optimizer: 1
     random_state: 42
+  
+  paths:
+    model_dir: "models/gpr_cross_loso"
+    results_dir: "results/gpr"
+    plots_dir: "results/plots/gpr_cross_loso"
+  
+  # Frequencies for dual Ns state vector
+  frequencies:
+    ns1: [0.254, 0.34, 0.456, 0.612, 0.822, 1.1, 1.48, 1.99, 2.66, 3.57, 4.8, 6.43, 8.64, 11.6, 15.5, 20.9, 28.0, 37.5, 50.3, 67.6, 90.6, 122.0, 163.0, 219.0, 294.0, 394.0, 529.0, 710.0, 952.0, 1280.0, 1710.0, 2300.0, 3090.0, 4140.0, 5560.0, 7450.0, 10000.0]
+    ns6: [0.999, 1.33, 1.78, 2.37, 3.16, 4.22, 5.62, 7.5, 10.0, 13.3, 17.8, 23.7, 31.6, 42.2, 56.2, 75.0, 102.0, 135.0, 178.0, 237.0, 316.0, 422.0, 564.0, 750.0, 1000.0, 1330.0, 1780.0, 2370.0, 3160.0, 4220.0, 5620.0, 7500.0, 10000.0]

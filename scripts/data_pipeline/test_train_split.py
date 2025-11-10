@@ -11,7 +11,7 @@ def test_train_split(
     if data_folder is None: data_folder = "../data/Li_highC_25C"
     
     match method:
-        case "bin_and_split": df_train, df_test = bin_and_split(cycle_range, data_folder)
+        case "binning": df_train, df_test = bin_and_split(cycle_range, data_folder)
         case "temporal": df_train, df_test = temporal_split(data_folder)
         case _: raise ValueError(f"Unknown split method: {method}")
         
