@@ -22,7 +22,6 @@ temp_prediction*.png
 # Model files (optional - uncomment if models shouldn't be versioned)
 models/
 data/
-notebooks/data_exploration
-notebooks/experiments
+notebooks/
 results/plots
 plots/
