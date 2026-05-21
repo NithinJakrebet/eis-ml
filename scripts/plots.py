@@ -23,39 +23,88 @@ def degradation(channel, df: pd.DataFrame):
     
     
     
-def ard_summary(freqs_hz_ns_1, freqs_hz_ns_6, re_mean, re_std, im_mean, im_std, save_path=None):
+import numpy as np
+import matplotlib.pyplot as plt
+
+def ard_summary(
+    freqs_hz_ns_1=None,
+    freqs_hz_ns_6=None,
+    re_mean=None, re_std=None,
+    im_mean=None, im_std=None,
+    save_path=None,
+    title="ARD weights across folds"
+):
+    # Normalize "missing" inputs
+    freqs_hz_ns_1 = [] if freqs_hz_ns_1 is None else list(freqs_hz_ns_1)
+    freqs_hz_ns_6 = [] if freqs_hz_ns_6 is None else list(freqs_hz_ns_6)
+
+    n1 = len(freqs_hz_ns_1)
+    n6 = len(freqs_hz_ns_6)
+
+    if n1 + n6 == 0:
+        raise ValueError("Provide at least one of freqs_hz_ns_1 or freqs_hz_ns_6.")
+
+    # Basic shape sanity check (helps avoid silent misplots)
+    for name, arr in [("re_mean", re_mean), ("re_std", re_std), ("im_mean", im_mean), ("im_std", im_std)]:
+        if arr is None:
+            raise ValueError(f"{name} cannot be None.")
+        if len(arr) != (n1 + n6):
+            raise ValueError(
+                f"{name} length ({len(arr)}) must equal len(ns1)+len(ns6) ({n1+n6})."
+            )
+
     fig, ax = plt.subplots(figsize=(16, 8))
-    
-    ns1_idx = list(range(len(freqs_hz_ns_1)))
-    ns6_idx = list(range(len(freqs_hz_ns_1), len(freqs_hz_ns_1) + len(freqs_hz_ns_6)))
-    
-    ax.semilogx(freqs_hz_ns_1, re_mean[ns1_idx], 'o-', color='blue', 
-                label='Re(Z) Ns1 (discharged)', markersize=5)
-    ax.fill_between(freqs_hz_ns_1, 
-                     (re_mean - re_std)[ns1_idx], 
-                     (re_mean + re_std)[ns1_idx], 
-                     alpha=0.2, color='blue')
-    
-    ax.semilogx(freqs_hz_ns_1, im_mean[ns1_idx], 's--', color='cyan', 
-                label='-Im(Z) Ns1 (discharged)', markersize=5)
-    ax.fill_between(freqs_hz_ns_1, 
-                     (im_mean - im_std)[ns1_idx], 
-                     (im_mean + im_std)[ns1_idx], 
-                     alpha=0.2, color='cyan')
-    
-    ax.semilogx(freqs_hz_ns_6, re_mean[ns6_idx], '^-', color='red', 
-                label='Re(Z) Ns6 (charged)', markersize=5)
-    ax.fill_between(freqs_hz_ns_6, 
-                     (re_mean - re_std)[ns6_idx], 
-                     (re_mean + re_std)[ns6_idx], 
-                     alpha=0.2, color='red')
-    
-    ax.semilogx(freqs_hz_ns_6, im_mean[ns6_idx], 'v--', color='orange', 
-                label='-Im(Z) Ns6 (charged)', markersize=5)
-    ax.fill_between(freqs_hz_ns_6, 
-                     (im_mean - im_std)[ns6_idx], 
-                     (im_mean + im_std)[ns6_idx], 
-                     alpha=0.2, color='orange')
+
+    # Slices instead of index lists
+    ns1_slice = slice(0, n1)
+    ns6_slice = slice(n1, n1 + n6)
+
+    def _plot_block(freqs, slc, re_color, im_color, re_label, im_label, re_style, im_style):
+        if len(freqs) == 0:
+            return
+
+        freqs = np.asarray(freqs)
+
+        ax.semilogx(freqs, np.asarray(re_mean)[slc], re_style, color=re_color,
+                    label=re_label, markersize=5)
+        ax.fill_between(freqs,
+                        (np.asarray(re_mean) - np.asarray(re_std))[slc],
+                        (np.asarray(re_mean) + np.asarray(re_std))[slc],
+                        alpha=0.2, color=re_color)
+
+        ax.semilogx(freqs, np.asarray(im_mean)[slc], im_style, color=im_color,
+                    label=im_label, markersize=5)
+        ax.fill_between(freqs,
+                        (np.asarray(im_mean) - np.asarray(im_std))[slc],
+                        (np.asarray(im_mean) + np.asarray(im_std))[slc],
+                        alpha=0.2, color=im_color)
+
+    # Plot Ns1 only if provided
+    _plot_block(
+        freqs_hz_ns_1, ns1_slice,
+        re_color="blue", im_color="cyan",
+        re_label="Re(Z) Ns1 (discharged)", im_label="-Im(Z) Ns1 (discharged)",
+        re_style="o-", im_style="s--"
+    )
+
+    # Plot Ns6 only if provided
+    _plot_block(
+        freqs_hz_ns_6, ns6_slice,
+        re_color="red", im_color="orange",
+        re_label="Re(Z) Ns6 (charged)", im_label="-Im(Z) Ns6 (charged)",
+        re_style="^-", im_style="v--"
+    )
+
+    ax.set_title(title)
+    ax.set_xlabel("Frequency (Hz)")
+    ax.set_ylabel("ARD weight")
+    ax.grid(True, which="both", alpha=0.2)
+    ax.legend()
+
+    if save_path is not None:
+        fig.savefig(save_path, dpi=200, bbox_inches="tight")
+
+    return fig
     
     # Add frequency labels for each point
     # Label Ns1 frequencies

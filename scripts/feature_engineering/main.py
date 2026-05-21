@@ -1,13 +1,13 @@
 import numpy as np
 from .state_vector import build_state_vector
 
-def build_model_input(df, cycle_range=None, freqs=None): 
+def build_model_input(df, cycle_range=None, freqs=None, ns_states=None): 
     
     if cycle_range:
         min_cycle, max_cycle = cycle_range
         df = df[df['cycle number'].between(min_cycle, max_cycle)]
     
-    state_vectors, sample_ids = build_state_vector(df,frequencies=freqs)
+    state_vectors, sample_ids = build_state_vector(df,frequencies=freqs, ns_states=ns_states)
     
     X = np.array(state_vectors)
     y = []

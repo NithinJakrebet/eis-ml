@@ -3,11 +3,12 @@ import pandas as pd
 
 def build_state_vector(
     df: pd.DataFrame,
-    frequencies: list = None
+    frequencies: list = None,
+    ns_states: list = None
 ):
     if 'channel' not in df.columns: raise ValueError("DataFrame must have a 'channel' column. Use load_single_channel to add it.")
     
-    ns_states = [1, 6]
+    ns_states = [1, 6] if not ns_states else ns_states
     freq_range = (0.2, 20000)
     
     df_filtered = (
