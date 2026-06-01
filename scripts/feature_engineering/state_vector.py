@@ -4,12 +4,13 @@ import pandas as pd
 def build_state_vector(
     df: pd.DataFrame,
     frequencies: list = None,
-    ns_states: list = None
+    ns_states: list = None,
+    freq_range: tuple = None
 ):
     if 'channel' not in df.columns: raise ValueError("DataFrame must have a 'channel' column. Use load_single_channel to add it.")
-    
+
     ns_states = [1, 6] if not ns_states else ns_states
-    freq_range = (0.2, 20000)
+    freq_range = (0.2, 20000) if freq_range is None else freq_range
     
     df_filtered = (
         df.dropna()
@@ -67,5 +68,19 @@ def build_state_vector(
     
     S = np.asarray(state_vectors, dtype=float)
     print(f"State vector shape: {S.shape} (samples x features)")
-    
-    return S, sample_ids
+
+    # Feature-layout metadata: which column maps to which (Ns, freq, Re/Im).
+    # Column order matches the construction above: per Ns, all Re then all Im.
+    columns = []
+    for ns in ns_states:
+        for f in ns_frequencies[ns]:
+            columns.append((ns, f, 'Re'))
+        for f in ns_frequencies[ns]:
+            columns.append((ns, f, 'Im'))
+    layout = {
+        'ns_states': list(ns_states),
+        'per_ns': {ns: list(ns_frequencies[ns]) for ns in ns_states},
+        'columns': columns,
+    }
+
+    return S, sample_ids, layout

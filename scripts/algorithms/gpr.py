@@ -118,6 +118,73 @@ def train_capacity_gpr_fast(
     )
 
 
+def train_capacity_gpr(X_train, y_train, gpr_params=None):
+    """Zhang-faithful capacity GPR predictor.
+
+    Mirrors Multi_T_EIS_Capacity_GPR.m: an *isotropic* squared-exponential
+    covariance (covSEiso, a single shared length scale) with a *learned*
+    Gaussian noise term (likGauss, sn~=0.1), fit on the FULL training set.
+    This is the model to use for prediction. ARD is intentionally NOT used
+    here (see train_ard_diagnostic) because Zhang used ARD only as a
+    feature-importance diagnostic, not as the regressor.
+    """
+    if gpr_params is None:
+        gpr_params = {}
+
+    Xs, mu, sig = _standardize_fit(X_train)
+
+    kernel = (
+        ConstantKernel(1.0, (1e-3, 1e3))
+        * RBF(length_scale=1.0, length_scale_bounds=(1e-2, 1e2))
+        + WhiteKernel(noise_level=0.1, noise_level_bounds=(1e-5, 1e1))
+    )
+
+    model = GaussianProcessRegressor(
+        kernel=kernel,
+        alpha=gpr_params.get('alpha', 1e-10),
+        normalize_y=gpr_params.get('normalize_y', True),
+        n_restarts_optimizer=gpr_params.get('n_restarts_optimizer', 5),
+        random_state=gpr_params.get('random_state', 42),
+    ).fit(Xs, y_train)
+
+    return dict(model=model, mu=mu, sig=sig, kind="capacity_iso", cols=None)
+
+
+def train_ard_diagnostic(X_train, y_train, gpr_params=None, subset_size=300):
+    """Separate ARD-SE model used ONLY to extract per-frequency relevance weights.
+
+    Mirrors Zhang's ARD_GPR.m (covSEard): one length scale per feature, so
+    exp(-length_scale) ranks feature importance. This is a diagnostic, not the
+    predictor. Optimized on a stratified subset for speed (default 300), since
+    ARD has one hyperparameter per feature and we only need the weights.
+    """
+    if gpr_params is None:
+        gpr_params = {}
+
+    Xs, mu, sig = _standardize_fit(X_train)
+    if subset_size is not None and subset_size < len(y_train):
+        Xs, y_train = _stratified_subsample(
+            Xs, y_train, n=subset_size, seed=gpr_params.get('random_state', 42)
+        )
+
+    n_features = Xs.shape[1]
+    kernel = (
+        ConstantKernel(1.0, (1e-3, 1e3))
+        * RBF(length_scale=np.ones(n_features), length_scale_bounds=(1e-2, 1e2))
+        + WhiteKernel(noise_level=0.1, noise_level_bounds=(1e-5, 1e1))
+    )
+
+    model = GaussianProcessRegressor(
+        kernel=kernel,
+        alpha=gpr_params.get('alpha', 1e-10),
+        normalize_y=gpr_params.get('normalize_y', True),
+        n_restarts_optimizer=gpr_params.get('n_restarts_optimizer', 1),
+        random_state=gpr_params.get('random_state', 42),
+    ).fit(Xs, y_train)
+
+    return dict(model=model, mu=mu, sig=sig, kind="capacity", cols=None)
+
+
 def predict_fast(bundle, X_test):
     """
     Predict with trained GPR model
@@ -134,6 +201,10 @@ def predict_fast(bundle, X_test):
     
     mean, std = bundle["model"].predict(Xs, return_std=True)
     return mean, std
+
+
+# Alias: works for both the isotropic predictor and the ARD diagnostic bundles.
+predict = predict_fast
 
 def ard_frequency_weights(bundle):
     """
