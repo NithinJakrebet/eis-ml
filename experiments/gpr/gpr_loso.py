@@ -42,6 +42,9 @@ gpr_params = {
     'n_restarts_optimizer': 5,
     'random_state': 42,
 }
+# Predictor hyperparameters are optimized on a subset, then conditioned on all
+# data (None = optimize on full data, slower but exact). See gpr.train_capacity_gpr.
+predictor_subset_size = 500
 # ARD diagnostic is fit on a stratified subset for speed (weights only)
 ard_subset_size = 300
 
@@ -56,7 +59,7 @@ results = []          # per-fold (cell, rmse, mae, r2)
 models = {}
 W = []                # per-fold ARD weight vectors (aligned to layout columns)
 layout_ref = None
-y_true_all, y_pred_all = [], []
+y_true_all, y_pred_all, y_std_all, cell_all = [], [], [], []
 
 print("Starting training loop")
 for i, test_cell in enumerate(CHANNELS):
@@ -74,8 +77,11 @@ for i, test_cell in enumerate(CHANNELS):
     if layout_ref is None:
         layout_ref = layout
 
-    # Prediction model: isotropic SE + learned noise, fit on full training data
-    model = gpr.train_capacity_gpr(X_train, y_train, gpr_params=gpr_params)
+    # Prediction model: isotropic SE + learned noise. subset_size optimizes
+    # hyperparameters on a subset then conditions on all data (see gpr.py).
+    model = gpr.train_capacity_gpr(
+        X_train, y_train, gpr_params=gpr_params, subset_size=predictor_subset_size
+    )
     models[test_cell] = model
 
     y_pred, y_std = gpr.predict(model, X_test)
@@ -84,6 +90,8 @@ for i, test_cell in enumerate(CHANNELS):
 
     y_true_all.append(np.asarray(y_test))
     y_pred_all.append(np.asarray(y_pred))
+    y_std_all.append(np.asarray(y_std))
+    cell_all.append(np.array([test_cell] * len(y_test)))
 
     # Separate ARD diagnostic purely for per-frequency relevance weights
     ard = gpr.train_ard_diagnostic(X_train, y_train, gpr_params=gpr_params,
@@ -110,9 +118,23 @@ print(df.to_string(index=False))
 print(f"\nMean per-cell RMSE: {df['rmse'].mean():.4f}  MAE: {df['mae'].mean():.4f}")
 print(f"Pooled (all test points) R2: {pooled_r2:.4f}  |  RMSE: {pooled_rmse:.4f}")
 
-# Pooled parity plot
+# Persist predictions (with sigma) and per-cell metrics for downstream diagnostics
 out_dir = Path("results") / "gpr" / "outputs"
 out_dir.mkdir(parents=True, exist_ok=True)
+preds_df = pd.DataFrame({
+    "cell": np.concatenate(cell_all),
+    "y_true": y_true_all,
+    "y_pred": y_pred_all,
+    "y_std": np.concatenate(y_std_all),
+})
+preds_path = out_dir / f"gpr_loso_predictions_{data_folder}.csv"
+preds_df.to_csv(preds_path, index=False)
+per_cell_path = out_dir / f"gpr_loso_per_cell_{data_folder}.csv"
+df.to_csv(per_cell_path, index=False)
+print(f"Saved predictions -> {preds_path}")
+print(f"Saved per-cell metrics -> {per_cell_path}")
+
+# Pooled parity plot
 fig, ax = plt.subplots(figsize=(6, 6))
 ax.scatter(y_true_all, y_pred_all, s=10, alpha=0.4, color="#2d6cdf")
 lims = [min(y_true_all.min(), y_pred_all.min()), max(y_true_all.max(), y_pred_all.max())]

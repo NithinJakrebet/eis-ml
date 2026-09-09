@@ -55,6 +55,10 @@ def build_model_input(df, cycle_range=None, freqs=None, ns_states=None,
     
     y = np.array(y)
 
+    # Per-row provenance: (channel, cycle) aligned to X/y rows. Enables
+    # multi-step forecasting (pair EIS at cycle n with capacity at cycle n+j).
+    layout['sample_ids'] = sample_ids
+
     if return_layout:
         return X, y, layout
     return X, y

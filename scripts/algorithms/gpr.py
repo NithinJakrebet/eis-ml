@@ -6,11 +6,15 @@ def _standardize_fit(X):
     mu = np.nanmean(X, axis=0)
     sig = np.nanstd(X, axis=0)
     sig = np.where(sig < 1e-12, 1.0, sig)  # Avoid division by zero
-    return (X - mu) / sig, mu, sig
+    mu = np.where(np.isnan(mu), 0.0, mu)   # Fully-NaN column -> mean 0
+    # Impute missing cells to the column mean (0 in standardized space) so GPR,
+    # which rejects NaN, works on datasets with irregular EIS coverage (e.g. sparseEIS).
+    Xs = np.nan_to_num((X - mu) / sig, nan=0.0)
+    return Xs, mu, sig
 
 
 def _standardize_apply(X, mu, sig):
-    return (X - mu) / sig
+    return np.nan_to_num((X - mu) / sig, nan=0.0)
 
 
 def _stratified_subsample(X, y, n=300, seed=42):
@@ -118,18 +122,31 @@ def train_capacity_gpr_fast(
     )
 
 
-def train_capacity_gpr(X_train, y_train, gpr_params=None):
+def train_capacity_gpr(X_train, y_train, gpr_params=None, subset_size=None):
     """Zhang-faithful capacity GPR predictor.
 
     Mirrors Multi_T_EIS_Capacity_GPR.m: an *isotropic* squared-exponential
     covariance (covSEiso, a single shared length scale) with a *learned*
-    Gaussian noise term (likGauss, sn~=0.1), fit on the FULL training set.
-    This is the model to use for prediction. ARD is intentionally NOT used
+    Gaussian noise term (likGauss, sn~=0.1). ARD is intentionally NOT used
     here (see train_ard_diagnostic) because Zhang used ARD only as a
     feature-importance diagnostic, not as the regressor.
+
+    subset_size: if set, hyperparameters are optimized on a stratified subset
+    of this many points, then the kernel is frozen and the posterior is
+    conditioned on the FULL training set (optimizer disabled). Exact-GP
+    hyperparameter optimization is O(n^3) per likelihood eval, so optimizing
+    on a few hundred points and conditioning on all of them is far cheaper
+    while keeping full-data predictions. With the 3-hyperparameter isotropic
+    kernel this subset optimization is robust (unlike 140-dim ARD on a subset).
+    If None, hyperparameters are optimized directly on the full data.
     """
     if gpr_params is None:
         gpr_params = {}
+
+    alpha = gpr_params.get('alpha', 1e-10)
+    normalize_y = gpr_params.get('normalize_y', True)
+    n_restarts = gpr_params.get('n_restarts_optimizer', 5)
+    random_state = gpr_params.get('random_state', 42)
 
     Xs, mu, sig = _standardize_fit(X_train)
 
@@ -139,13 +156,23 @@ def train_capacity_gpr(X_train, y_train, gpr_params=None):
         + WhiteKernel(noise_level=0.1, noise_level_bounds=(1e-5, 1e1))
     )
 
-    model = GaussianProcessRegressor(
-        kernel=kernel,
-        alpha=gpr_params.get('alpha', 1e-10),
-        normalize_y=gpr_params.get('normalize_y', True),
-        n_restarts_optimizer=gpr_params.get('n_restarts_optimizer', 5),
-        random_state=gpr_params.get('random_state', 42),
-    ).fit(Xs, y_train)
+    if subset_size is not None and subset_size < len(y_train):
+        # Stage 1: learn hyperparameters on a stratified subset
+        Xsub, ysub = _stratified_subsample(Xs, y_train, n=subset_size, seed=random_state)
+        gpr_opt = GaussianProcessRegressor(
+            kernel=kernel, alpha=alpha, normalize_y=normalize_y,
+            n_restarts_optimizer=n_restarts, random_state=random_state,
+        ).fit(Xsub, ysub)
+        # Stage 2: freeze hyperparameters, condition on all data
+        model = GaussianProcessRegressor(
+            kernel=gpr_opt.kernel_, alpha=alpha, normalize_y=normalize_y,
+            optimizer=None, random_state=random_state,
+        ).fit(Xs, y_train)
+    else:
+        model = GaussianProcessRegressor(
+            kernel=kernel, alpha=alpha, normalize_y=normalize_y,
+            n_restarts_optimizer=n_restarts, random_state=random_state,
+        ).fit(Xs, y_train)
 
     return dict(model=model, mu=mu, sig=sig, kind="capacity_iso", cols=None)
 
