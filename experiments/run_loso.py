@@ -9,7 +9,7 @@ Examples::
 
 Outputs go to ``results/<model>/<dataset>_ns<steps>/``:
 predictions.csv, per_cell.csv, summary.json, parity.png, calibration.png,
-plus ard_weights.csv/.png (GPR with --ard) or feature_importance.csv (XGB).
+trajectories.png, plus ard_weights.csv/.png (GPR with --ard) or feature_importance.csv (XGB).
 """
 
 from __future__ import annotations
@@ -123,6 +123,7 @@ def main(argv=None):
     title = f"{args.model.upper()} LOSO on {spec.name} (Ns {list(spec.eis_ns)})"
     plots.parity(preds, title=title).savefig(out_dir / "parity.png", dpi=150, bbox_inches="tight")
     plots.calibration(preds, title=title).savefig(out_dir / "calibration.png", dpi=150, bbox_inches="tight")
+    plots.capacity_vs_cycle(preds).savefig(out_dir / "trajectories.png", dpi=120, bbox_inches="tight")
 
     if ard_rows:
         W = np.vstack(ard_rows)

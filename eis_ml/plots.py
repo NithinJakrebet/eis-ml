@@ -106,20 +106,24 @@ def calibration(preds: pd.DataFrame, title: str = "") -> plt.Figure:
 def ard_weights(weights: pd.DataFrame, title: str = "ARD relevance") -> plt.Figure:
     """Relevance vs frequency, one line per (Ns, Re/Im). ``weights`` has ns, part, freq, w_mean, w_std."""
     fig, ax = plt.subplots(figsize=(9, 4.2))
-    groups = list(weights.groupby(["ns", "part"], sort=True))
-    for i, ((ns, part), g) in enumerate(groups):
-        g = g.sort_values("freq")
-        color = SERIES[i % len(SERIES)]
-        ls = "-" if part == "re" else "--"
-        ax.plot(g["freq"], g["w_mean"], ls, color=color, lw=2, ms=4, marker="o",
-                label=f"Ns {ns} {'Re(Z)' if part == 're' else '-Im(Z)'}")
-        ax.fill_between(g["freq"], g["w_mean"] - g["w_std"], g["w_mean"] + g["w_std"],
-                        color=color, alpha=0.12, lw=0)
+    ns_order = list(pd.unique(weights["ns"]))  # colour = Ns step, line style = Re / Im
+    n_series = 0
+    for ns in ns_order:
+        color = SERIES[ns_order.index(ns) % len(SERIES)]
+        for part, ls in (("re", "-"), ("im", "--")):
+            g = weights[(weights["ns"] == ns) & (weights["part"] == part)].sort_values("freq")
+            if g.empty:
+                continue
+            n_series += 1
+            ax.plot(g["freq"], g["w_mean"], ls, color=color, lw=2, ms=4, marker="o",
+                    label=f"Ns {ns} {'Re(Z)' if part == 're' else '-Im(Z)'}")
+            ax.fill_between(g["freq"], g["w_mean"] - g["w_std"], g["w_mean"] + g["w_std"],
+                            color=color, alpha=0.12, lw=0)
     ax.set_xscale("log")
     ax.set_xlabel("Frequency (Hz)")
     ax.set_ylabel("Relevance  exp(−ℓ)")
     ax.set_title(title, fontsize=10, loc="left")
-    ax.legend(frameon=False, fontsize=8, ncol=min(len(groups), 4))
+    ax.legend(frameon=False, fontsize=8, ncol=min(n_series, 4))
     style_axes(ax)
     fig.tight_layout()
     return fig
