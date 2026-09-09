@@ -28,3 +28,6 @@ mlartifacts/
 graphify-out/manifest.json
 graphify-out/cost.json
 graphify-out/cache/*
+
+# graphify curated-graph backups
+graphify-out/20*/
