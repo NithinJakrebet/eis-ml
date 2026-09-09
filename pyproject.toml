@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eis-ml"
+version = "0.2.0"
+description = "Predict Li-ion battery state of health from electrochemical impedance spectra"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=2.0",
+    "pandas>=2.2",
+    "scikit-learn>=1.5",
+    "xgboost>=2.1",
+    "matplotlib>=3.8",
+    "scipy>=1.13",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "jupyter", "ipykernel"]
+
+[tool.setuptools.packages.find]
+include = ["eis_ml*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

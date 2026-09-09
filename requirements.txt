@@ -1,9 +1,2 @@
-numpy>=2.3.0
-pandas>=2.3.0
-scikit-learn>=1.7.0
-xgboost>=3.1.0
-matplotlib>=3.10.0
-mlflow>=3.5.0
-jupyter>=1.1.0
-ipykernel>=7.1.0
-joblib>=1.5.0
+# Installs the eis_ml package (editable) plus dev tools. See pyproject.toml.
+-e .[dev]
