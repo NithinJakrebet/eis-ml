@@ -1,9 +1,11 @@
-# .graphifyignore
-node_modules/
-dist/
-*.generated.py
-
-# only index src/, ignore everything else
-*
-!src/
-!src/**
+# Keep the knowledge graph focused on source and docs.
+data/
+mlruns/
+models/
+plots/
+results/
+notebooks/
+graphify-out/
+.pytest_cache/
+*.egg-info/
+__pycache__/
