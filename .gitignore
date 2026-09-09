@@ -1,31 +1,30 @@
-# OS files
+# OS / editor
 .DS_Store
-
-# Python cache
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# MLflow artifacts
-mlruns/
-mlartifacts/
-temp_prediction*.png
-
-# Jupyter checkpoints
-.ipynb_checkpoints/
-
-# IDE settings
 .vscode/
 .idea/
 
-# Model files (optional - uncomment if models shouldn't be versioned)
-models/
-data/
-notebooks/
-results/plots
-plots/
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+.pytest_cache/
 
-graphify-out/manifest.json   
-graphify-out/cost.json        
-graphify-out/cache/*         
+# Jupyter
+.ipynb_checkpoints/
+
+# Experiment tracking
+mlruns/
+mlartifacts/
+
+# Not versioned: raw data, notebooks, trained models, bulky plots
+/data/
+/notebooks/
+/models/
+/plots/
+/results/plots/
+
+# graphify scratch
+graphify-out/manifest.json
+graphify-out/cost.json
+graphify-out/cache/*
