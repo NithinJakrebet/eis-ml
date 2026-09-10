@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from eis_ml import DatasetSpec, build_dataset, capacity_labels, eis_features
-from eis_ml.features import feature_table
+from datasets import DatasetSpec
+from features import build_dataset, capacity_labels, eis_features, feature_table
 
 NS1_FREQS = [0.5, 5.0, 50.0]
 NS6_FREQS = [5.0, 50.0]

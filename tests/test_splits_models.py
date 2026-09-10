@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from eis_ml import loso_folds, temporal_split
-from eis_ml.models import MODELS, gpr, xgb
+from algorithms import MODELS, gpr, xgb
+from splits import loso_folds, temporal_split
 
 
 @pytest.fixture

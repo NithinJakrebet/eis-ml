@@ -23,7 +23,7 @@ import warnings
 import numpy as np
 import pandas as pd
 
-from .datasets import DatasetSpec
+from datasets import DatasetSpec
 
 PARTS = ("re", "im")
 _EIS_COLS = {
@@ -43,7 +43,7 @@ def eis_features(df: pd.DataFrame, eis_ns, freq_range=(0.2, 20_000.0)) -> pd.Dat
     or handle NaN natively).
     """
     if "channel" not in df:
-        raise ValueError("df needs a 'channel' column; load it with eis_ml.data.load_cell")
+        raise ValueError("df needs a 'channel' column; load it with datasets.load_cell")
     eis_ns = [int(n) for n in eis_ns]
     lo, hi = freq_range
     mask = df["Ns"].isin(eis_ns) & (df["freq/Hz"] > lo) & (df["freq/Hz"] <= hi)

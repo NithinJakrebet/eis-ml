@@ -25,9 +25,12 @@ import numpy as np
 import pandas as pd
 from xgboost import XGBRegressor
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from eis_ml import build_dataset, get_dataset, load_dataset, loso_folds  # noqa: E402
-from eis_ml import metrics, plots  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # repo root holds the modules
+import metrics  # noqa: E402
+import plots  # noqa: E402
+from datasets import get_dataset, load_dataset  # noqa: E402
+from features import build_dataset  # noqa: E402
+from splits import loso_folds  # noqa: E402
 
 warnings.filterwarnings("ignore")
 

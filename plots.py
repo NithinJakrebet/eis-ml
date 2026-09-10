@@ -29,7 +29,7 @@ def style_axes(ax):
 
 def parity(preds: pd.DataFrame, title: str = "LOSO parity") -> plt.Figure:
     """Predicted vs actual SOH for every held-out point, with pooled scores."""
-    from .metrics import pooled
+    from metrics import pooled
 
     yt, yp = preds["y_true"].to_numpy(), preds["y_pred"].to_numpy()
     s = pooled(preds)

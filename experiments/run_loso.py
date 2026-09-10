@@ -7,7 +7,7 @@ Examples::
     python experiments/run_loso.py --dataset PEIS-HC-RT-sparseEIS --model gpr
     python experiments/run_loso.py --dataset GEIS-HC-RT --model xgb --param n_models=5
 
-Outputs go to ``results/<model>/<dataset>_ns<steps>/``:
+Outputs go to ``results/<model>/<dataset>_ns<steps>[_<tag>]/``:
 predictions.csv, per_cell.csv, summary.json, parity.png, calibration.png,
 trajectories.png, plus ard_weights.csv/.png (GPR with --ard) or feature_importance.csv (XGB).
 """
@@ -28,11 +28,13 @@ matplotlib.use("Agg")
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # run without `pip install -e .`
-from eis_ml import build_dataset, get_dataset, load_dataset, loso_folds  # noqa: E402
-from eis_ml import metrics, plots  # noqa: E402
-from eis_ml.features import feature_table  # noqa: E402
-from eis_ml.models import MODELS, gpr, xgb  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # repo root holds the modules
+import metrics  # noqa: E402
+import plots  # noqa: E402
+from algorithms import MODELS, gpr, xgb  # noqa: E402
+from datasets import get_dataset, load_dataset  # noqa: E402
+from features import build_dataset, feature_table  # noqa: E402
+from splits import loso_folds  # noqa: E402
 
 warnings.filterwarnings("ignore")
 
@@ -48,6 +50,7 @@ def parse_args(argv=None):
     p.add_argument("--param", action="append", default=[], metavar="KEY=VALUE",
                    help="model fit parameter, e.g. --param subset_size=None --param n_models=5")
     p.add_argument("--ard", action="store_true", help="GPR only: also fit the ARD diagnostic per fold")
+    p.add_argument("--tag", help="suffix for the output folder, e.g. --tag linear-mean")
     p.add_argument("--out", default="results", help="root output directory")
     return p.parse_args(argv)
 
@@ -69,7 +72,7 @@ def main(argv=None):
                        freq_range=args.freq_range, cells=args.cells)
     model = MODELS[args.model]
     fit_params = parse_params(args.param)
-    out_dir = Path(args.out) / args.model / spec.tag
+    out_dir = Path(args.out) / args.model / (spec.tag + (f"_{args.tag}" if args.tag else ""))
     out_dir.mkdir(parents=True, exist_ok=True)
 
     t0 = time.time()
