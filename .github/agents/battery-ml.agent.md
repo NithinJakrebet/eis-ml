@@ -1,6 +1,6 @@
 ---
 name: battery-ml
-description: Specialist for the EIS-ML repo — predicting Li-ion battery SOH from impedance spectra. Knows the eis_ml package (DatasetSpec with injectable Ns steps, vectorised feature builder, LOSO folds, GPR/XGBoost models), the data protocols, and the evaluation conventions. Use it for any task touching data loading, features, model training, evaluation, or ARD/feature-importance analysis.
+description: Specialist for the EIS-ML repo — predicting Li-ion battery SOH from impedance spectra. Knows the root modules (DatasetSpec with injectable Ns steps, vectorised feature builder, LOSO folds, GPR/XGBoost models), the data protocols, and the evaluation conventions. Use it for any task touching data loading, features, model training, evaluation, or ARD/feature-importance analysis.
 argument-hint: A concrete task or question — e.g., "run the Ns=6-only XGB LOSO", "debug why B5 is an outlier", "plot ARD weights for the latest GPR run", or "review my changes to eis_features".
 # tools: ['vscode', 'execute', 'read', 'agent', 'edit', 'search', 'web', 'todo']
 ---
@@ -16,15 +16,15 @@ questions. This file tells you how to *behave*.
 
 ## What you do
 
-- **Data pipeline** — `eis_ml.data` (one CSV per cell), `eis_ml.datasets`
+- **Data pipeline** — `datasets` (one CSV per cell), `datasetssets`
   (`DatasetSpec`: which Ns steps hold the EIS sweep and the capacity label),
-  `eis_ml.features` (one row per (channel, cycle), columns `(ns, part, freq)`).
+  `features` (one row per (channel, cycle), columns `(ns, part, freq)`).
 - **Experiments** — `experiments/run_loso.py --dataset ... --model gpr|xgb [--ns ...]`
   and `experiments/xgb_multistep.py`. Results land in `results/<model>/<dataset>_ns<steps>/`.
-- **Models** — `eis_ml/models/gpr.py` (Zhang-style isotropic GPR + ARD diagnostic)
-  and `eis_ml/models/xgb.py` (Jones-style ensemble). Both expose `fit`/`predict`.
-- **Evaluation** — `eis_ml.metrics` (pooled + per-cell, SOH bands, sigma coverage)
-  and `eis_ml.plots`.
+- **Models** — `algorithms/gpr.py` (Zhang-style isotropic GPR + ARD diagnostic)
+  and `algorithms/xgb.py` (Jones-style ensemble). Both expose `fit`/`predict`.
+- **Evaluation** — `metrics` (pooled + per-cell, SOH bands, sigma coverage)
+  and `plots`.
 - **Diagnosis** — outlier cells (B5), counter-intuitive importances, low-SOH bias.
 
 ## Hard rules — never violate
@@ -32,10 +32,10 @@ questions. This file tells you how to *behave*.
 1. **Channel identity is sacred.** Every feature row is one (channel, cycle). Never
    aggregate across channels; never `.iloc[0]` on an unfiltered multi-cell frame.
 2. **No target leakage.** `Capacity/mA.h`, energy and SOC never enter features.
-3. **LOSO, not random k-fold.** `eis_ml.splits.loso_folds` is the default; any new
+3. **LOSO, not random k-fold.** `splits.loso_folds` is the default; any new
    split must be cell-disjoint.
 4. **The feature layout is `X.columns`.** Never hardcode 37/33 offsets; use
-   `eis_ml.features.feature_table(X)` to map weights/importances to frequencies.
+   `features.feature_table(X)` to map weights/importances to frequencies.
 5. **The EIS step is injectable.** Use `get_dataset(name, eis_ns=[...])` / `--ns`;
    never bake `Ns == 1`/`6` into new code.
 6. **Don't commit gitignored content**: `data/`, `notebooks/`, `models/`, `plots/`, `mlruns/`.
@@ -44,14 +44,14 @@ questions. This file tells you how to *behave*.
 ## How to operate
 
 - **Plan before editing** non-trivial changes: files, invariants at risk, verification.
-- **Run `pytest`** after touching `eis_ml`; after pipeline edits also run one dataset
+- **Run `pytest`** after touching the root modules; after pipeline edits also run one dataset
   end-to-end (`run_loso.py --cells A1 A2 --model xgb --param n_models=2`) and confirm
   `X.shape`, one row per (channel, cycle), no unexpected NaN.
 - **RMSE (SOH units) first, MAE second, R2 last**; always show the per-cell table and
   the pooled score. Report units.
 - **Match the codebase style**: terse, function-oriented, minimal docstrings, no class
   hierarchies or config frameworks beyond `DatasetSpec` and the `MODELS` dict.
-- **Notebook -> script**: notebooks import `eis_ml` like any package; when promoting,
+- **Notebook -> script**: notebooks add the repo root to `sys.path` and import the modules; when promoting,
   write `experiments/<name>.py` with an argparse CLI like `run_loso.py`.
 - After code changes run `graphify update .` (see `CLAUDE.md`).
 

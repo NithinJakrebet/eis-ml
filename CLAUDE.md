@@ -4,7 +4,7 @@ Predict Li-ion battery state of health (SOH) from EIS spectra. Read `docs/CONTEX
 before non-trivial work; it is the orientation document for this repo.
 
 Quick facts:
-- Package: `eis_ml/` (installed with `pip install -e .`). Experiments: `experiments/`. Tests: `pytest`.
+- Modules sit at the repo root (`datasets.py`, `features.py`, `splits.py`, `algorithms/`, `metrics.py`, `plots.py`); `pip install -r requirements.txt`. Experiments: `experiments/`. Tests: `pytest`.
 - Python env: conda `eis-ml-conda` (`/opt/anaconda3/envs/eis-ml-conda/bin/python`).
 - Run a LOSO experiment: `python experiments/run_loso.py --dataset PEIS-HC-RT --model gpr --ns 6`.
 - The EIS step (`Ns`) is injectable through `get_dataset(name, eis_ns=[...])` or `--ns`; never hardcode it.

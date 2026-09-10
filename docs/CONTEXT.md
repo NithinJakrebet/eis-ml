@@ -31,7 +31,7 @@ protocols arrives, Jones-style forecasting with the future protocol as an input.
   only to rank frequencies; relevance = `exp(-length_scale)`. It found 17.80 Hz and
   2.16 Hz to be the salient frequencies (charge-transfer regime).
 - The MATLAB reference code lives outside this repo in `../Zhang/Code-Matlab/`
-  (`Multi_T_EIS_Capacity_GPR.m`, `ARD_GPR.m`); `eis_ml/models/gpr.py` mirrors it.
+  (`Multi_T_EIS_Capacity_GPR.m`, `ARD_GPR.m`); `algorithms/gpr.py` mirrors it.
 
 ### Jones et al., Nature Communications 13:4806 (2022)
 - 88 coin cells cycled with *randomly varying* currents; forecasts future capacity
@@ -40,7 +40,7 @@ protocols arrives, Jones-style forecasting with the future protocol as an input.
 - Their headline that "EIS alone is insufficient" is driven by protocol variance.
   **Our cells all follow one constant protocol**, so the action input has no
   variance and our task reduces to SOH estimation, where EIS alone is strong.
-  `eis_ml/models/xgb.py` mirrors the ensemble; the forecast horizon plays the
+  `algorithms/xgb.py` mirrors the ensemble; the forecast horizon plays the
   role of the action in `experiments/xgb_multistep.py`.
 
 Other background papers in `../Research Papers/`: Messing 2021 (relaxation + EIS),
@@ -53,7 +53,7 @@ van Vlijmen 2023 (interpretable aging modes), and a GPR tutorial.
 
 Raw CSVs live in `data/` (gitignored; download link in the README) or wherever
 `EIS_ML_DATA` points. One CSV per cell, Bio-Logic long form. Nothing in the
-package cares where the CSVs come from beyond `eis_ml.data.load_cell`, so a
+package cares where the CSVs come from beyond `datasets.load_cell`, so a
 Dropbox or Drive sync only needs to land files in that layout.
 
 | dataset | cells | EIS steps (`eis_ns`) | capacity step (`capacity_ns`) | notes |
@@ -63,7 +63,7 @@ Dropbox or Drive sync only needs to land files in that layout.
 | PEIS-HC-RT-sparseEIS | A1-A8 | 5 | 3 | EIS every ~10 cycles (15-16 per cell); **A4 ran 790 cycles and died** (capacity -> 0 after ~cycle 175 while EIS kept being measured, 71 sweeps), which dominates its error |
 | Na_NoEIS | A1, A2 | none | n/a | sodium cells, no impedance columns |
 
-These are encoded as `DatasetSpec` presets in `eis_ml/datasets.py`. **The EIS step
+These are encoded as `DatasetSpec` presets in `datasets.py`. **The EIS step
 is injectable**: `get_dataset("PEIS-HC-RT", eis_ns=[6])` or `--ns 6` on the CLI.
 A new folder needs no code, only `--ns` and `--capacity-ns` (or a new preset).
 
@@ -76,7 +76,7 @@ Data quirks handled by the loader / feature builder:
 
 ---
 
-## Pipeline (`eis_ml/`)
+## Pipeline (modules at the repo root)
 
 ```
 load_dataset(spec) -> df           long form, all cells, 'channel' column
@@ -97,7 +97,7 @@ Invariants (enforced by code and `tests/test_features.py`):
 4. Features are built once for the whole dataset, then split by cell. This is
    ~150x faster than the old per-fold Python loops and guarantees train and test
    share the same column grid. It is leakage-free because feature construction is
-   purely per-row; standardisation happens inside `models.gpr.fit` on training rows.
+   purely per-row; standardisation happens inside `algorithms.gpr.fit` on training rows.
 5. Capacity (the target), energy and SOC never enter `X`.
 
 ### Historical bugs, do not regress
@@ -110,9 +110,9 @@ Invariants (enforced by code and `tests/test_features.py`):
 
 ---
 
-## Models (`eis_ml/models/`)
+## Models (`algorithms/`)
 
-- **gpr.fit** - Zhang-faithful: `Constant * RBF(isotropic) + WhiteKernel(learned)`,
+- **algorithms.gpr.fit** - Zhang-faithful: `Constant * RBF(isotropic) + WhiteKernel(learned)`,
   `normalize_y=True`. `subset_size=500` optimises the 3 hyperparameters on a
   stratified subset, then conditions on all training rows (`optimizer=None`).
   NaN features are imputed to the column mean after standardisation.
@@ -177,8 +177,8 @@ Current numbers: `results/<model>/PEIS-HC-RT_ns1-6/summary.json`.
 
 ## Conventions
 
-- Python env: conda `eis-ml-conda`; `pip install -e .[dev]`; `pytest` before committing.
-- Prototype in `notebooks/` (untracked); promote to `experiments/*.py` importing `eis_ml`.
+- Python env: conda `eis-ml-conda`; `pip install -r requirements.txt`; `pytest` before committing.
+- Prototype in `notebooks/` (untracked, add the repo root to `sys.path`); promote to `experiments/*.py`.
 - Results are small tracked artefacts under `results/<model>/<dataset>_ns<steps>/`.
 - Don't commit `data/`, `notebooks/`, `models/`, `plots/`, `mlruns/`.
 - Terse, function-oriented code; no class hierarchies or config frameworks. A
