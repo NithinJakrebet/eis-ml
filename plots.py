@@ -71,10 +71,10 @@ def capacity_vs_cycle(preds: pd.DataFrame, ncols: int = 4) -> plt.Figure:
     return fig
 
 
-def calibration(preds: pd.DataFrame, title: str = "") -> plt.Figure:
+def calibration(preds: pd.DataFrame, title: str = "", std_col: str = "y_std") -> plt.Figure:
     """Reliability curve and residual-vs-sigma scatter for the predicted uncertainty."""
     yt, yp = preds["y_true"].to_numpy(), preds["y_pred"].to_numpy()
-    sd = preds["y_std"].clip(lower=1e-9).to_numpy()
+    sd = preds[std_col].clip(lower=1e-9).to_numpy()
     z = (yt - yp) / sd
     levels = np.linspace(0.05, 0.95, 19)
     empirical = [np.mean(np.abs(z) <= norm.ppf(0.5 + L / 2)) for L in levels]

@@ -61,13 +61,61 @@ def by_soh_band(preds: pd.DataFrame, bands=SOH_BANDS) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def coverage(preds: pd.DataFrame) -> dict[str, float]:
+def coverage(preds: pd.DataFrame, std_col: str = "y_std") -> dict[str, float]:
     """Fraction of residuals inside 1 and 2 predicted sigma (nominal 68% / 95%)."""
-    z = (preds["y_true"] - preds["y_pred"]) / preds["y_std"].clip(lower=1e-9)
+    z = (preds["y_true"] - preds["y_pred"]) / preds[std_col].clip(lower=1e-9)
     z = z.to_numpy()
     return {
         "within_1sigma": float(np.mean(np.abs(z) <= 1)),
         "within_2sigma": float(np.mean(np.abs(z) <= 2)),
         "mean_abs_z": float(np.mean(np.abs(z))),
-        "mean_sigma": float(preds["y_std"].mean()),
+        "mean_sigma": float(preds[std_col].mean()),
+    }
+
+
+def conformal_scale(preds: pd.DataFrame, alpha: float = 0.05) -> pd.Series:
+    """Per-row multiplier that turns ``y_std`` into a (1-alpha) interval half-width.
+
+    Split-conformal calibration, leave-one-cell-out: for the rows of cell c the
+    scale is the finite-sample (1-alpha) quantile of |residual| / sigma over
+    the *other* cells' held-out predictions, so the held-out cell never
+    calibrates itself. Interval: ``y_pred +/- scale * y_std``.
+    """
+    z = ((preds["y_true"] - preds["y_pred"]).abs() / preds["y_std"].clip(lower=1e-9)).to_numpy()
+    ch = preds["channel"].to_numpy()
+    scale = np.empty(len(preds))
+    for cell in pd.unique(ch):
+        m = ch == cell
+        others = z[~m]
+        n = len(others)
+        q = min(1.0, np.ceil((n + 1) * (1 - alpha)) / n)
+        scale[m] = np.quantile(others, q)
+    return pd.Series(scale, index=preds.index, name="sigma_scale")
+
+
+def calibrate(preds: pd.DataFrame, alpha: float = 0.05) -> pd.DataFrame:
+    """Add ``sigma_scale`` and ``y_std_cal`` (= scale * y_std / z_{1-alpha/2}) columns.
+
+    ``y_std_cal`` is a sigma whose +/-1.96 (for alpha=0.05) band is the conformal
+    interval, so the existing coverage / calibration plots apply unchanged.
+    """
+    from scipy.stats import norm
+
+    out = preds.copy()
+    out["sigma_scale"] = conformal_scale(out, alpha)
+    out["y_std_cal"] = out["y_std"] * out["sigma_scale"] / norm.ppf(1 - alpha / 2)
+    return out
+
+
+def conformal_summary(preds: pd.DataFrame, alpha: float = 0.05) -> dict[str, float]:
+    """Empirical coverage and width of the conformal interval (needs ``calibrate`` columns)."""
+    half = preds["sigma_scale"] * preds["y_std"]
+    inside = (preds["y_true"] - preds["y_pred"]).abs() <= half
+    return {
+        "alpha": alpha,
+        "target_coverage": 1 - alpha,
+        "coverage": float(inside.mean()),
+        "median_sigma_scale": float(preds["sigma_scale"].median()),
+        "mean_half_width": float(half.mean()),
+        "per_cell_coverage_min": float(inside.groupby(preds["channel"]).mean().min()),
     }

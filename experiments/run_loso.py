@@ -8,7 +8,7 @@ Examples::
     python experiments/run_loso.py --dataset GEIS-HC-RT --model xgb --param n_models=5
 
 Outputs go to ``results/<model>/<dataset>_ns<steps>[_<tag>]/``:
-predictions.csv, per_cell.csv, summary.json, parity.png, calibration.png,
+predictions.csv (with conformal ``y_std_cal``), per_cell.csv, summary.json, parity.png, calibration.png,
 trajectories.png, plus ard_weights.csv/.png (GPR with --ard) or feature_importance.csv (XGB).
 """
 
@@ -105,7 +105,7 @@ def main(argv=None):
         if args.model == "xgb":
             importances.append(xgb.feature_importance(bundle))
 
-    preds = pd.concat(preds, ignore_index=True)
+    preds = metrics.calibrate(pd.concat(preds, ignore_index=True), alpha=0.05)
     preds.to_csv(out_dir / "predictions.csv", index=False)
 
     per_cell = metrics.per_cell(preds)
@@ -113,19 +113,22 @@ def main(argv=None):
     pooled = metrics.pooled(preds)
     bands = metrics.by_soh_band(preds)
     cov = metrics.coverage(preds)
+    conformal = metrics.conformal_summary(preds, alpha=0.05)
 
     summary = {
         "dataset": spec.name, "eis_ns": list(spec.eis_ns), "capacity_ns": spec.capacity_ns,
         "freq_range": list(spec.freq_range), "model": args.model, "fit_params": fit_params,
         "n_features": int(X.shape[1]), "n_samples": int(len(X)), "cells": cells,
         "pooled": pooled, "mean_per_cell_rmse": float(per_cell["rmse"].mean()),
-        "by_soh_band": bands.to_dict(orient="records"), "coverage": cov,
+        "by_soh_band": bands.to_dict(orient="records"), "coverage": cov, "conformal": conformal,
     }
     (out_dir / "summary.json").write_text(json.dumps(summary, indent=2))
 
     title = f"{args.model.upper()} LOSO on {spec.name} (Ns {list(spec.eis_ns)})"
     plots.parity(preds, title=title).savefig(out_dir / "parity.png", dpi=150, bbox_inches="tight")
     plots.calibration(preds, title=title).savefig(out_dir / "calibration.png", dpi=150, bbox_inches="tight")
+    plots.calibration(preds, title=title + ", conformal sigma", std_col="y_std_cal").savefig(
+        out_dir / "calibration_conformal.png", dpi=150, bbox_inches="tight")
     plots.capacity_vs_cycle(preds).savefig(out_dir / "trajectories.png", dpi=120, bbox_inches="tight")
 
     if ard_rows:
@@ -149,6 +152,8 @@ def main(argv=None):
     print(bands.to_string(index=False, float_format=lambda v: f"{v:.4f}"))
     print(f"Coverage: {cov['within_1sigma']:.1%} within 1 sigma, {cov['within_2sigma']:.1%} within 2 sigma "
           f"(nominal 68% / 95%)")
+    print(f"Conformal 95% interval: coverage {conformal['coverage']:.1%}, sigma scale x{conformal['median_sigma_scale']:.2f}, "
+          f"mean half-width {conformal['mean_half_width']:.3f} SOH")
     print(f"Saved -> {out_dir}  ({time.time() - t0:.0f}s total)")
 
 

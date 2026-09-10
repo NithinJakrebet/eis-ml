@@ -61,5 +61,13 @@
     "within_2sigma": 0.25098743267504486,
     "mean_abs_z": 5.738065107069766,
     "mean_sigma": 0.005935379303991795
+  },
+  "conformal": {
+    "alpha": 0.05,
+    "target_coverage": 0.95,
+    "coverage": 0.9346499102333932,
+    "median_sigma_scale": 17.554444972379265,
+    "mean_half_width": 0.10061227063706317,
+    "per_cell_coverage_min": 0.7248322147651006
   }
 }
