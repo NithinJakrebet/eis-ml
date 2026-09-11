@@ -112,3 +112,14 @@ def test_feature_table(df):
     tab = feature_table(X)
     assert list(tab.columns) == ["ns", "part", "freq"]
     assert len(tab) == X.shape[1]
+
+
+def test_select_freq(df):
+    from features import select_freq
+
+    X = eis_features(df, eis_ns=[1, 6])
+    low = select_freq(X, 0, 10)
+    assert set(low.columns.get_level_values("freq")) == {0.5, 5.0}
+    rest = select_freq(X, 0, 10, exclude=True)
+    assert set(rest.columns.get_level_values("freq")) == {50.0, 20000.0}
+    assert low.shape[1] + rest.shape[1] == X.shape[1]

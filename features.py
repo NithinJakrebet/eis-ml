@@ -119,3 +119,10 @@ def build_dataset(df: pd.DataFrame, spec: DatasetSpec) -> tuple[pd.DataFrame, pd
 def feature_table(X: pd.DataFrame) -> pd.DataFrame:
     """Columns of ``X`` as a flat table (ns, part, freq), one row per feature."""
     return X.columns.to_frame(index=False)
+
+
+def select_freq(X: pd.DataFrame, lo: float = 0.0, hi: float = np.inf, exclude: bool = False) -> pd.DataFrame:
+    """Keep (or with ``exclude=True`` drop) the features with ``lo < freq <= hi`` Hz."""
+    f = X.columns.get_level_values("freq").to_numpy(dtype=float)
+    m = (f > lo) & (f <= hi)
+    return X.loc[:, ~m if exclude else m]
