@@ -68,3 +68,21 @@ def test_xgb_feature_importance(toy):
     X, y = toy
     bundle = xgb.fit(X, y, n_models=2, n_estimators=20)
     assert xgb.feature_importance(bundle).shape == (X.shape[1],)
+
+
+def test_gpr_linear_mean_extrapolates():
+    # SOH is linear in one feature; hold out the rows beyond the training range so the
+    # zero-mean GP has to extrapolate (it reverts to the mean) while the linear mean follows the trend.
+    rng = np.random.RandomState(1)
+    index = pd.MultiIndex.from_tuples([("A1", k) for k in range(80)], names=["channel", "cycle"])
+    X = pd.DataFrame(rng.normal(size=(80, 4)), index=index)
+    X[0] = np.linspace(-2, 2, 80)
+    y = pd.Series(1.0 - 0.15 * X[0] + 0.01 * X[1], index=index)
+    train, test = (X[0] <= 0.8).to_numpy(), (X[0] > 0.8).to_numpy()
+    zero = gpr.fit(X[train], y[train], n_restarts=0, mean="zero")
+    linear = gpr.fit(X[train], y[train], n_restarts=0, mean="linear")
+    rmse = lambda b: float(np.sqrt(np.mean((gpr.predict(b, X[test])[0] - y[test].to_numpy()) ** 2)))
+    assert rmse(linear) < rmse(zero)
+    assert linear["trend"] is not None and zero["trend"] is None
+    with pytest.raises(ValueError):
+        gpr.fit(X[train], y[train], mean="quadratic")

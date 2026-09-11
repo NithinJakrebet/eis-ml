@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import numpy as np
 from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.linear_model import Ridge
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel, WhiteKernel
 
 
@@ -69,7 +70,8 @@ def _fit_gp(kernel, Xs, y, *, subset_size, n_restarts, random_state, alpha):
     ).fit(Xs, y)
 
 
-def fit(X, y, subset_size=500, n_restarts=5, random_state=42, alpha=1e-10):
+def fit(X, y, subset_size=500, n_restarts=5, random_state=42, alpha=1e-10,
+        mean="zero", ridge_alpha=1.0):
     """Zhang-style isotropic GPR predictor.
 
     subset_size: optimise the 3 kernel hyperparameters on a stratified subset
@@ -77,20 +79,36 @@ def fit(X, y, subset_size=500, n_restarts=5, random_state=42, alpha=1e-10):
     Exact-GP optimisation is O(n^3) per likelihood evaluation, so this is
     much faster than optimising on ~2500 rows and gives near-identical
     predictions. ``None`` optimises on everything.
+
+    mean: ``"zero"`` is Zhang's model (the GP reverts to the training mean
+    far from the data). ``"linear"`` first fits a ridge regression on the
+    standardised features and lets the GP model its residuals, so a held-out
+    cell that degrades further than any training cell follows the linear
+    trend instead of snapping back toward the mean.
     """
     y = np.asarray(y, dtype=float)
     Xs, mu, sig = _standardize_fit(X)
+    trend = None
+    residual = y
+    if mean == "linear":
+        trend = Ridge(alpha=ridge_alpha).fit(Xs, y)
+        residual = y - trend.predict(Xs)
+    elif mean != "zero":
+        raise ValueError(f"mean must be 'zero' or 'linear', got {mean!r}")
     model = _fit_gp(
-        _kernel(1.0), Xs, y,
+        _kernel(1.0), Xs, residual,
         subset_size=subset_size, n_restarts=n_restarts, random_state=random_state, alpha=alpha,
     )
-    return {"model": model, "mu": mu, "sig": sig}
+    return {"model": model, "mu": mu, "sig": sig, "trend": trend}
 
 
 def predict(bundle, X):
     """Posterior mean and standard deviation of SOH."""
     Xs = _standardize_apply(X, bundle["mu"], bundle["sig"])
-    return bundle["model"].predict(Xs, return_std=True)
+    mean, std = bundle["model"].predict(Xs, return_std=True)
+    if bundle.get("trend") is not None:
+        mean = mean + bundle["trend"].predict(Xs)
+    return mean, std
 
 
 def fit_ard(X, y, subset_size=300, n_restarts=1, random_state=42, alpha=1e-10):

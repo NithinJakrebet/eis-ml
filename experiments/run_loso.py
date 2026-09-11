@@ -7,6 +7,13 @@ Examples::
     python experiments/run_loso.py --dataset PEIS-HC-RT-sparseEIS --model gpr
     python experiments/run_loso.py --dataset GEIS-HC-RT --model xgb --param n_models=5
 
+GPR feature reduction (leakage-free, done inside each fold)::
+
+    python experiments/run_loso.py --dataset PEIS-HC-RT --model gpr --ard-top-k 20 --tag ard-top20
+    # reuse the per-fold ARD weights that run saved instead of refitting ARD:
+    python experiments/run_loso.py --dataset PEIS-HC-RT --model gpr --ard-top-k 20 \
+        --ard-from results/gpr/PEIS-HC-RT_ns1-6_ard-top20 --param mean=linear --tag linear-mean_ard-top20
+
 Outputs go to ``results/<model>/<dataset>_ns<steps>[_<tag>]/``:
 predictions.csv, per_cell.csv, summary.json, parity.png, calibration.png,
 trajectories.png, plus ard_weights.csv/.png (GPR with --ard) or feature_importance.csv (XGB).
@@ -50,6 +57,10 @@ def parse_args(argv=None):
     p.add_argument("--param", action="append", default=[], metavar="KEY=VALUE",
                    help="model fit parameter, e.g. --param subset_size=None --param n_models=5")
     p.add_argument("--ard", action="store_true", help="GPR only: also fit the ARD diagnostic per fold")
+    p.add_argument("--ard-top-k", type=int, metavar="K",
+                   help="GPR only: keep the K most relevant features per fold (ARD fit on the training cells)")
+    p.add_argument("--ard-from", metavar="DIR",
+                   help="reuse per-fold ARD weights saved by a previous run (ard_fold_weights.csv) instead of refitting")
     p.add_argument("--tag", help="suffix for the output folder, e.g. --tag linear-mean")
     p.add_argument("--out", default="results", help="root output directory")
     return p.parse_args(argv)
@@ -83,11 +94,28 @@ def main(argv=None):
           f"-> X={X.shape} from {len(cells)} cells ({time.time() - t0:.1f}s)")
     print(f"model={args.model} params={fit_params or 'defaults'}  ->  {out_dir}")
 
-    preds, ard_rows, importances = [], [], []
+    cached_ard = None
+    if args.ard_from:
+        cached_ard = pd.read_csv(Path(args.ard_from) / "ard_fold_weights.csv", index_col="fold")
+        if cached_ard.shape[1] != X.shape[1]:
+            raise ValueError(f"{args.ard_from} has {cached_ard.shape[1]} features, X has {X.shape[1]}")
+
+    preds, ard_rows, importances, selected = [], [], [], []
     for cell, train, test in loso_folds(X):
         t1 = time.time()
-        bundle = model.fit(X[train], y[train], **fit_params)
-        mean, std = model.predict(bundle, X[test])
+        Xtr, Xte = X[train], X[test]
+        if args.model == "gpr" and (args.ard or args.ard_top_k):
+            if cached_ard is not None:
+                w = cached_ard.loc[cell].to_numpy()
+            else:
+                w = gpr.ard_weights(gpr.fit_ard(Xtr, y[train]))
+            ard_rows.append(w)
+            if args.ard_top_k:
+                keep = np.sort(np.argsort(w)[::-1][: args.ard_top_k])
+                Xtr, Xte = Xtr.iloc[:, keep], Xte.iloc[:, keep]
+                selected.append(feature_table(Xtr).assign(fold=cell, weight=w[keep]))
+        bundle = model.fit(Xtr, y[train], **fit_params)
+        mean, std = model.predict(bundle, Xte)
         fold = pd.DataFrame({
             "channel": cell,
             "cycle": X.index[test].get_level_values("cycle"),
@@ -100,8 +128,6 @@ def main(argv=None):
         print(f"  [{cell:>3}] n={test.sum():4d}  RMSE={s['rmse']:.4f}  MAE={s['mae']:.4f}  "
               f"R2={s['r2']:7.3f}  ({time.time() - t1:.1f}s)")
 
-        if args.model == "gpr" and args.ard:
-            ard_rows.append(gpr.ard_weights(gpr.fit_ard(X[train], y[train])))
         if args.model == "xgb":
             importances.append(xgb.feature_importance(bundle))
 
@@ -118,6 +144,7 @@ def main(argv=None):
         "dataset": spec.name, "eis_ns": list(spec.eis_ns), "capacity_ns": spec.capacity_ns,
         "freq_range": list(spec.freq_range), "model": args.model, "fit_params": fit_params,
         "n_features": int(X.shape[1]), "n_samples": int(len(X)), "cells": cells,
+        "ard_top_k": args.ard_top_k, "ard_from": args.ard_from,
         "pooled": pooled, "mean_per_cell_rmse": float(per_cell["rmse"].mean()),
         "by_soh_band": bands.to_dict(orient="records"), "coverage": cov,
     }
@@ -130,6 +157,9 @@ def main(argv=None):
 
     if ard_rows:
         W = np.vstack(ard_rows)
+        pd.DataFrame(W, index=pd.Index(cells, name="fold")).to_csv(out_dir / "ard_fold_weights.csv")
+        if selected:
+            pd.concat(selected, ignore_index=True).to_csv(out_dir / "selected_features.csv", index=False)
         weights = feature_table(X)
         weights["w_mean"], weights["w_std"] = W.mean(axis=0), W.std(axis=0)
         weights.sort_values("w_mean", ascending=False).to_csv(out_dir / "ard_weights.csv", index=False)
